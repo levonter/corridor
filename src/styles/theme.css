@@ -149,14 +149,21 @@ html, body, #root {
 }
 
 /* ── RESPONSIVE ── */
+@media(max-width:1024px) {
+  .app-layout > div:last-of-type:not(.canvas):not(.panel) {
+    position: fixed !important; right: 0; top: 0; height: 100vh;
+    width: 380px !important; min-width: 380px !important;
+    box-shadow: -4px 0 20px rgba(0,0,0,.15);
+  }
+}
 @media(max-width:860px) {
   .app-layout { flex-direction: column; }
-  .panel { width: 100% !important; min-width: unset !important; max-height: 55vh; border-right: none; border-bottom: 1px solid var(--border-primary); }
+  .panel { width: 100% !important; min-width: unset !important; max-height: 50vh; border-right: none; border-bottom: 1px solid var(--border-primary); }
   .panel.collapsed { max-height: 0; }
-  .canvas { min-height: 45vh; }
+  .canvas { min-height: 50vh; }
   .sidebar-toggle { top: auto; bottom: 0; left: 50%; transform: translateX(-50%); width: 48px; height: 24px; border-radius: 0 0 8px 8px; border-top: none; border-left: 1px solid var(--border-primary); }
 }
 @media(max-width:480px) {
-  .panel { max-height: 50vh; }
-  .canvas { min-height: 50vh; }
+  .panel { max-height: 45vh; }
+  .canvas { min-height: 55vh; }
 }
