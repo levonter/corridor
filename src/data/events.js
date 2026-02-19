@@ -57,25 +57,111 @@ export function renderEventToMap(Lf, event, animate=true) {
   const g={corridor:Lf.layerGroup(),risks:Lf.layerGroup(),access:Lf.layerGroup(),incidents:Lf.layerGroup(),bases:Lf.layerGroup()}
   if (event.corridor?.length) {
     const cc=event.corridor.map(p=>[p.a,p.o])
-    // Animated dashed corridor line
-    const severity = event.severity || 'medium'
-    const dashSpeed = severity==='critical'?'12 6':severity==='high'?'10 8':'14 8'
-    const line = Lf.polyline(cc,{color:'#8B4513',weight:3,opacity:0.7,dashArray:dashSpeed})
-    if(animate){
-      const el = line.getElement?.()
-      // CSS animation applied via class after add
-      line.on('add',()=>{const e=line.getElement();if(e){e.style.animation=severity==='critical'?'dashFlowDense 1s linear infinite':'dashFlow 2s linear infinite'}})
-    }
-    line.addTo(g.corridor)
-    Lf.polyline(cc,{color:'#8B4513',weight:12,opacity:0.08}).addTo(g.corridor)
-    event.corridor.forEach(p=>{
-      const c=p.t==='city'?'#3D2B1F':p.t==='base'?'#2E86AB':'#8B7355',r=p.t==='city'?7:p.t==='base'?6:4
-      Lf.circleMarker([p.a,p.o],{radius:r,fillColor:c,color:'#FFF',weight:2,fillOpacity:0.9}).bindPopup(`<h3>${p.n}</h3><p>${p.d}</p>`).addTo(g.corridor)
-    })
+    const severity=event.severity||'medium'
+    const dashSpeed=severity==='critical'?'12 6':severity==='high'?'10 8':'14 8'
+    const line=Lf.polyline(cc,{color:'#8B4513',weight:3,opacity:0.7,dashArray:dashSpeed})
+    if(animate)line.on('add',()=>{const e=line.getElement();if(e)e.style.animation=severity==='critical'?'dashFlowDense 1s linear infinite':'dashFlow 2s linear infinite'})
+    line.addTo(g.corridor);Lf.polyline(cc,{color:'#8B4513',weight:12,opacity:0.08}).addTo(g.corridor)
+    event.corridor.forEach(p=>{const c=p.t==='city'?'#3D2B1F':p.t==='base'?'#2E86AB':'#8B7355',r=p.t==='city'?7:p.t==='base'?6:4;Lf.circleMarker([p.a,p.o],{radius:r,fillColor:c,color:'#FFF',weight:2,fillOpacity:0.9}).bindPopup(`<h3>${p.n}</h3><p>${p.d}</p>`).addTo(g.corridor)})
   }
   ;(event.riskZones||[]).forEach(r=>{const sv=SEVERITY[r.s]||SEVERITY.medium;Lf.circle([r.a,r.o],{radius:r.r,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:0.08,dashArray:'6 4'}).bindPopup(`<h3>${r.n}</h3><span class='sv' style='background:${sv.bg};color:${sv.color}'>${r.s.toUpperCase()}</span><p>${r.d}</p>`).addTo(g.risks)})
   ;(event.accessDenied||[]).forEach(z=>{Lf.circle([z.a,z.o],{radius:z.r,fillColor:'#C73E1D',color:'#C73E1D',weight:2,fillOpacity:0.1,dashArray:'8 4'}).addTo(g.access);Lf.marker([z.a,z.o],{icon:Lf.divIcon({className:'dl',html:`🚫 ${z.n}<br><span style='font-size:0.8em;opacity:0.7'>NO ACCESS</span>`,iconSize:[130,35]})}).addTo(g.access)})
-  ;(event.incidents||[]).forEach(i=>{const sv=SEVERITY[i.s]||SEVERITY.medium,ic=ICON_MAP[i.tp]||'⚠️';Lf.circleMarker([i.a,i.o],{radius:i.s==='critical'?10:8,fillColor:sv.color,color:'#FFF',weight:2,fillOpacity:0.85}).bindPopup(`<h3>${ic} ${i.ti}</h3><span class='sv' style='background:${sv.bg};color:${sv.color}'>${i.s.toUpperCase()}</span> <span class='mt'>${i.dt}</span><p>${i.d}</p><p class='mt'>⚔️ ${i.ac} &nbsp; 🏥 ${i.og}</p>`).addTo(g.incidents);if(i.s==='critical')Lf.circleMarker([i.a,i.o],{radius:20,fillColor:sv.color,color:sv.color,weight:1,fillOpacity:0.1,className:'pulse-ring'}).addTo(g.incidents)})
+  ;(event.incidents||[]).forEach(i=>{const sv=SEVERITY[i.s]||SEVERITY.medium,ic=ICON_MAP[i.tp]||'⚠️';Lf.circleMarker([i.a,i.o],{radius:i.s==='critical'?10:8,fillColor:sv.color,color:'#FFF',weight:2,fillOpacity:0.85}).bindPopup(`<h3>${ic} ${i.ti}</h3><span class='sv' style='background:${sv.bg};color:${sv.color}'>${i.s.toUpperCase()}</span> <span class='mt'>${i.dt}</span><p>${i.d}</p><p class='mt'>⚔️ ${i.ac} &nbsp; 🏥 ${i.og}</p>`).addTo(g.incidents);if(i.s==='critical')Lf.circleMarker([i.a,i.o],{radius:20,fillColor:sv.color,color:sv.color,weight:1,fillOpacity:0.1}).addTo(g.incidents)})
   ;(event.bases||[]).forEach(b=>{Lf.marker([b.a,b.o],{icon:Lf.divIcon({className:'dl',html:`<span style='color:#2E86AB;font-size:16px'>🏕️</span>`,iconSize:[20,20]})}).bindPopup(`<h3>🏕️ ${b.n}</h3><p><b>Status:</b> ${b.st}</p>`).addTo(g.bases)})
   return g
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 3: EXPORT HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+export function eventToGeoJSON(ev) {
+  const features = []
+  ;(ev.corridor||[]).forEach(p => features.push({type:'Feature',geometry:{type:'Point',coordinates:[p.o,p.a]},properties:{name:p.n,type:'waypoint',subtype:p.t,description:p.d}}))
+  if (ev.corridor?.length>1) features.push({type:'Feature',geometry:{type:'LineString',coordinates:ev.corridor.map(p=>[p.o,p.a])},properties:{name:ev.name+' Corridor',type:'corridor'}})
+  ;(ev.incidents||[]).forEach(i => features.push({type:'Feature',geometry:{type:'Point',coordinates:[i.o,i.a]},properties:{name:i.ti,type:'incident',severity:i.s,incidentType:i.tp,date:i.dt,description:i.d,actor:i.ac,organization:i.og}}))
+  ;(ev.riskZones||[]).forEach(r => features.push({type:'Feature',geometry:{type:'Point',coordinates:[r.o,r.a]},properties:{name:r.n,type:'risk_zone',severity:r.s,radius:r.r,description:r.d}}))
+  ;(ev.accessDenied||[]).forEach(z => features.push({type:'Feature',geometry:{type:'Point',coordinates:[z.o,z.a]},properties:{name:z.n,type:'access_denied',radius:z.r}}))
+  ;(ev.bases||[]).forEach(b => features.push({type:'Feature',geometry:{type:'Point',coordinates:[b.o,b.a]},properties:{name:b.n,type:'base',status:b.st,capacity:b.c}}))
+  return {type:'FeatureCollection',properties:{event:ev.name,severity:ev.severity,exported:new Date().toISOString()},features}
+}
+
+export function eventToCSV(ev) {
+  const rows = [['Type','Name','Latitude','Longitude','Severity','Date','Description','Actor','Organization']]
+  ;(ev.incidents||[]).forEach(i => rows.push(['Incident',i.ti,i.a,i.o,i.s,i.dt,`"${(i.d||'').replace(/"/g,'""')}"`,i.ac,i.og]))
+  ;(ev.corridor||[]).forEach(p => rows.push(['Waypoint',p.n,p.a,p.o,'','',`"${(p.d||'').replace(/"/g,'""')}"`,'','']))
+  ;(ev.riskZones||[]).forEach(r => rows.push(['Risk Zone',r.n,r.a,r.o,r.s,'',`"${(r.d||'').replace(/"/g,'""')}"`,'','']))
+  ;(ev.accessDenied||[]).forEach(z => rows.push(['Access Denied',z.n,z.a,z.o,'','','','','']))
+  ;(ev.bases||[]).forEach(b => rows.push(['Base',b.n,b.a,b.o,'','',b.st,'','']))
+  return rows.map(r=>r.join(',')).join('\n')
+}
+
+export function eventToReport(ev) {
+  const lines = []
+  lines.push(`# ${ev.name}`)
+  lines.push(`**Status:** ${ev.status} | **Severity:** ${ev.severity?.toUpperCase()} | **Updated:** ${ev.updatedAt}\n`)
+  lines.push(`## Brief\n${ev.brief||'No brief.'}\n`)
+  if ((ev.briefs||[]).length > 0) {
+    lines.push(`## Briefs Timeline`)
+    ev.briefs.forEach(b => lines.push(`- **[${new Date(b.ts).toLocaleDateString()}]** ${b.text}${b.archived?' *(archived)*':''}`))
+    lines.push('')
+  }
+  if ((ev.incidents||[]).length > 0) {
+    lines.push(`## Incidents (${ev.incidents.length})`)
+    ev.incidents.forEach(i => lines.push(`- **${i.ti}** (${i.dt}) — ${i.s.toUpperCase()} — ${i.d} — Actor: ${i.ac}, Org: ${i.og}`))
+    lines.push('')
+  }
+  if ((ev.riskZones||[]).length > 0) {
+    lines.push(`## Risk Zones (${ev.riskZones.length})`)
+    ev.riskZones.forEach(r => lines.push(`- **${r.n}** — ${r.s.toUpperCase()} — ${r.d}`))
+    lines.push('')
+  }
+  if ((ev.accessDenied||[]).length > 0) {
+    lines.push(`## Access Denied (${ev.accessDenied.length})`)
+    ev.accessDenied.forEach(z => lines.push(`- **${z.n}** (${z.a.toFixed(2)}°N, ${z.o.toFixed(2)}°E)`))
+    lines.push('')
+  }
+  if ((ev.bases||[]).length > 0) {
+    lines.push(`## Bases (${ev.bases.length})`)
+    ev.bases.forEach(b => lines.push(`- **${b.n}** — ${b.st} — ${b.c}`))
+    lines.push('')
+  }
+  if ((ev.notebook||[]).length > 0) {
+    lines.push(`## Field Notes (${ev.notebook.length})`)
+    ev.notebook.forEach(n => lines.push(`- **[${new Date(n.ts).toLocaleDateString()}] ${n.author}:** ${n.text}`))
+    lines.push('')
+  }
+  lines.push(`---\n*Exported from Corridor Planner v2.0 on ${new Date().toISOString().slice(0,10)}*`)
+  return lines.join('\n')
+}
+
+// ═══ SHARE: Encode/Decode event to URL-safe string ═══
+export function encodeShare(ev) {
+  // Minimal payload for sharing — strip large unnecessary fields
+  const payload = {
+    n: ev.name, s: ev.severity, st: ev.status, b: ev.brief,
+    bs: (ev.briefs||[]).filter(x=>!x.archived).map(x=>({t:x.text,d:x.ts})),
+    r: ev.region, c: ev.corridor, rz: ev.riskZones,
+    i: (ev.incidents||[]).map(x=>({id:x.id,dt:x.dt,a:x.a,o:x.o,tp:x.tp,s:x.s,ti:x.ti,d:x.d,ac:x.ac,og:x.og})),
+    ad: ev.accessDenied, ba: ev.bases,
+    nb: (ev.notebook||[]).slice(-20).map(x=>({a:x.author,t:x.text,d:x.ts})),
+  }
+  const json = JSON.stringify(payload)
+  return btoa(unescape(encodeURIComponent(json)))
+}
+
+export function decodeShare(encoded) {
+  try {
+    const json = decodeURIComponent(escape(atob(encoded)))
+    const p = JSON.parse(json)
+    return createEvent({
+      id: 'shared_' + Date.now(), name: p.n||'Shared Event', severity: p.s||'medium', status: p.st||'shared', brief: p.b||'',
+      briefs: (p.bs||[]).map((x,i)=>({id:'sb_'+i,text:x.t,ts:x.d,archived:false})),
+      region: p.r||{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]},
+      corridor: p.c||[], riskZones: p.rz||[],
+      incidents: (p.i||[]).map(x=>({...x})),
+      accessDenied: p.ad||[], bases: p.ba||[],
+      notebook: (p.nb||[]).map((x,i)=>({id:'sn_'+i,author:x.a||'Shared',type:'note',text:x.t,ts:x.d})),
+    })
+  } catch (e) { console.error('Share decode error:', e); return null }
 }
