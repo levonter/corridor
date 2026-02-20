@@ -1,95 +1,43 @@
-export const ICON_MAP = { bombardment:"💥", looting:"🔥", "access-denial":"🚫", "control-change":"⚑", health:"🦠", displacement:"👥" }
-export const SEVERITY = { critical:{color:"#C73E1D",bg:"#C73E1D22"}, high:{color:"#D4820C",bg:"#D4820C1A"}, medium:{color:"#A69220",bg:"#A692201A"}, low:{color:"#3B7A57",bg:"#3B7A571A"} }
-export const FLOW_NODES = [{id:"f1",label:"Planning",x:300,y:80,color:"#8B6914"},{id:"f2",label:"Base Setup",x:140,y:230,color:"#2E86AB"},{id:"f3",label:"Logistics",x:460,y:230,color:"#A23B72"},{id:"f4",label:"Risk Mgmt",x:140,y:400,color:"#C73E1D"},{id:"f5",label:"Local Coord",x:460,y:400,color:"#3B7A57"},{id:"f6",label:"Distribution",x:300,y:550,color:"#6A4C93"}]
-export const FLOW_CONNECTIONS = [["f1","f2"],["f1","f3"],["f2","f4"],["f3","f5"],["f4","f6"],["f5","f6"],["f2","f5"]]
-export const BASE_LAYERS = [{id:"osm",name:"OpenStreetMap",desc:"Standard"},{id:"hot",name:"HOT Humanitarian",desc:"Humanitarian"},{id:"esri",name:"ESRI Satellite",desc:"High-res"},{id:"topo",name:"OpenTopoMap",desc:"Topographic"}]
-export const COPERNICUS_INSTANCE = "2ac66286-c514-43e6-9f14-a15dc697315a"
-export const INC_TYPES = ['bombardment','looting','access-denial','control-change','health','displacement']
-export const SEV_LEVELS = ['critical','high','medium','low']
+export const ICON_MAP={bombardment:"💥",looting:"🔥","access-denial":"🚫","control-change":"⚑",health:"🦠",displacement:"👥",flood:"🌊",earthquake:"📐"}
+export const SEVERITY={critical:{color:"#C73E1D",bg:"#C73E1D22"},high:{color:"#D4820C",bg:"#D4820C1A"},medium:{color:"#A69220",bg:"#A692201A"},low:{color:"#3B7A57",bg:"#3B7A571A"}}
+export const BASE_LAYERS=[{id:"osm",name:"OpenStreetMap"},{id:"hot",name:"HOT Humanitarian"},{id:"esri",name:"ESRI Satellite"},{id:"topo",name:"OpenTopoMap"}]
+export const INC_TYPES=['bombardment','looting','access-denial','control-change','health','displacement','flood','earthquake']
+export const SEV_LEVELS=['critical','high','medium','low']
+export const EVENT_TYPES=[{id:'corridor',name:'Corridor',icon:'🛤️'},{id:'crisis',name:'Crisis',icon:'🚨'},{id:'displacement',name:'Displacement',icon:'👥'},{id:'health',name:'Health Emergency',icon:'🏥'},{id:'natural',name:'Natural Disaster',icon:'🌊'},{id:'custom',name:'Custom',icon:'📌'}]
+export const COPERNICUS_INSTANCE="2ac66286-c514-43e6-9f14-a15dc697315a"
 
-export function createEvent(ov={}) {
-  return { id:'evt_'+Date.now(), name:'New Event', status:'active', severity:'medium', briefs:[], brief:'', description:'',
-    region:{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]}, corridor:[], riskZones:[], incidents:[], accessDenied:[], bases:[],
-    notebook:[], createdAt:new Date().toISOString().slice(0,10), updatedAt:new Date().toISOString().slice(0,10), ...ov }
-}
+export function createEvent(ov={}){return{id:'evt_'+Date.now(),name:'New Event',type:'corridor',status:'active',severity:'medium',briefs:[],brief:'',region:{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]},corridor:[],riskZones:[],incidents:[],accessDenied:[],bases:[],drawings:[],notebook:[],createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString().slice(0,10),...ov}}
 
-export const SUDAN_EVENT = createEvent({
-  id:'evt_sudan_ss', name:'Sudan → South Sudan Corridor', status:'active', severity:'critical',
-  briefs:[{id:'b1',text:'Khartoum to Juba corridor (1,850km). Jonglei: 280K+ displaced, 3 counties access-denied, cholera in Duk County.',ts:'2026-02-09T10:00:00Z',archived:false},{id:'b2',text:'SSPDF declared control of Lankien. New commissioner appointed. UN/MSF advocating for humanitarian flights.',ts:'2026-02-12T08:00:00Z',archived:false}],
-  brief:'Khartoum to Juba corridor (1,850km). Jonglei: 280K+ displaced, 3 counties access-denied, cholera in Duk County.',
-  region:{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]},
-  corridor:[{n:"Khartoum",a:15.5,o:32.5,t:"city",d:"Origin — Coordination HQ"},{n:"El-Obeid",a:13.18,o:30.22,t:"wp",d:"Logistics transfer"},{n:"Kadugli",a:11.0,o:29.7,t:"wp",d:"South Kordofan"},{n:"Abyei",a:9.6,o:28.4,t:"rz",d:"Disputed territory"},{n:"Aweil",a:8.77,o:27.39,t:"wp",d:"N. Bahr el Ghazal"},{n:"Wau",a:7.7,o:28.0,t:"base",d:"Forward base"},{n:"Rumbek",a:6.8,o:29.7,t:"wp",d:"Lakes — Flood risk"},{n:"Bor",a:6.2,o:31.56,t:"wp",d:"Nile crossing"},{n:"Juba",a:4.85,o:31.58,t:"city",d:"Destination"}],
-  riskZones:[{n:"South Kordofan",a:11.5,o:29.5,r:80000,s:"high",d:"Active conflict."},{n:"Abyei Disputed",a:9.6,o:28.8,r:70000,s:"critical",d:"Sovereignty dispute."},{n:"Sudd Flood",a:7.0,o:30.0,r:100000,s:"medium",d:"Jun–Oct impassable."},{n:"Jonglei Conflict",a:8.0,o:31.5,r:120000,s:"critical",d:"280K+ displaced."}],
-  incidents:[
-    {id:"i1",dt:"2026-02-03",a:8.28,o:31.60,tp:"bombardment",s:"critical",ti:"Lankien Hospital Airstrike",d:"OCA hospital warehouse damaged.",ac:"SSPDF",og:"MSF Holland"},
-    {id:"i2",dt:"2026-02-03",a:8.45,o:31.75,tp:"looting",s:"high",ti:"Pieri PHCC Looted",d:"OCA Pieri PHCC looted.",ac:"Unknown",og:"MSF Holland"},
-    {id:"i3",dt:"2026-02-04",a:8.60,o:32.20,tp:"looting",s:"high",ti:"Walgak Office Burned",d:"Save the Children office burned.",ac:"Unknown",og:"Save the Children"},
-    {id:"i4",dt:"2026-01-26",a:8.0,o:31.5,tp:"access-denial",s:"critical",ti:"Evacuation Order",d:"Nyirol/Uror/Akobo 48h evacuation.",ac:"SSPDF",og:"Multiple"},
-    {id:"i5",dt:"2026-02-08",a:8.28,o:31.60,tp:"control-change",s:"high",ti:"Lankien Control to SSPDF",d:"SSPDF declared control.",ac:"SSPDF",og:"UN/MSF"},
-    {id:"i6",dt:"2026-01-01",a:7.7,o:31.3,tp:"health",s:"high",ti:"Cholera — Duk County",d:"~479 cholera cases.",ac:"N/A",og:"MSF France"},
-    {id:"i7",dt:"2025-12-15",a:8.3,o:31.8,tp:"displacement",s:"critical",ti:"280K+ Displaced",d:"Over 280K displaced.",ac:"SSPDF/SPLA-iO",og:"IOM/UNHCR"},
-  ],
-  accessDenied:[{n:"Nyirol County",a:8.5,o:31.6,r:45000},{n:"Uror County",a:8.1,o:32.0,r:50000},{n:"Akobo County",a:7.8,o:33.0,r:55000}],
-  bases:[{n:"Khartoum HQ",a:15.5,o:32.5,st:"Active",c:"Full ops"},{n:"Wau Forward",a:7.7,o:28.0,st:"Setup",c:"60%"},{n:"Juba Dist.",a:4.85,o:31.58,st:"Planning",c:"Distribution"}],
-  notebook:[{id:'n1',author:'System',type:'update',text:'Event created from Jonglei briefing. See @i1 Lankien Hospital Airstrike.',ts:'2026-02-09T10:00:00Z'}],
-  createdAt:'2026-02-09',updatedAt:'2026-02-16',
-})
+export const SUDAN_EVENT=createEvent({id:'evt_sudan_ss',name:'Sudan → South Sudan Corridor',type:'corridor',status:'active',severity:'critical',briefs:[{id:'b1',text:'Khartoum to Juba corridor (1,850km). Jonglei: 280K+ displaced, 3 counties access-denied, cholera in Duk County.',ts:'2026-02-09T10:00:00Z',archived:false},{id:'b2',text:'SSPDF declared control of Lankien. New commissioner appointed. UN/MSF advocating for humanitarian flights. Cholera response ongoing by MSF France.',ts:'2026-02-12T08:00:00Z',archived:false}],brief:'Khartoum to Juba corridor (1,850km). Jonglei: 280K+ displaced, 3 counties access-denied, cholera in Duk County.',region:{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]},corridor:[{n:"Khartoum",a:15.5,o:32.5,t:"city",d:"Origin — Coordination HQ"},{n:"El-Obeid",a:13.18,o:30.22,t:"wp",d:"Logistics transfer"},{n:"Kadugli",a:11.0,o:29.7,t:"wp",d:"South Kordofan"},{n:"Abyei",a:9.6,o:28.4,t:"rz",d:"Disputed territory"},{n:"Aweil",a:8.77,o:27.39,t:"wp",d:"N. Bahr el Ghazal"},{n:"Wau",a:7.7,o:28.0,t:"base",d:"Forward base"},{n:"Rumbek",a:6.8,o:29.7,t:"wp",d:"Lakes — Flood risk"},{n:"Bor",a:6.2,o:31.56,t:"wp",d:"Nile crossing"},{n:"Juba",a:4.85,o:31.58,t:"city",d:"Destination"}],riskZones:[{n:"South Kordofan",a:11.5,o:29.5,r:80000,s:"high",d:"Active conflict"},{n:"Abyei Disputed",a:9.6,o:28.8,r:70000,s:"critical",d:"Sovereignty dispute"},{n:"Sudd Flood",a:7.0,o:30.0,r:100000,s:"medium",d:"Jun–Oct impassable"},{n:"Jonglei Conflict",a:8.0,o:31.5,r:120000,s:"critical",d:"280K+ displaced"}],incidents:[{id:"i1",dt:"2026-02-03",a:8.28,o:31.60,tp:"bombardment",s:"critical",ti:"Lankien Hospital Airstrike",d:"OCA hospital warehouse damaged by aerial bombardment.",ac:"SSPDF",og:"MSF Holland"},{id:"i2",dt:"2026-02-03",a:8.45,o:31.75,tp:"looting",s:"high",ti:"Pieri PHCC Looted",d:"OCA Pieri PHCC looted by armed men.",ac:"Unknown",og:"MSF Holland"},{id:"i3",dt:"2026-02-04",a:8.60,o:32.20,tp:"looting",s:"high",ti:"Walgak Office Burned",d:"Save the Children office burned.",ac:"Unknown",og:"Save the Children"},{id:"i4",dt:"2026-01-26",a:8.0,o:31.5,tp:"access-denial",s:"critical",ti:"Evacuation Order",d:"Nyirol/Uror/Akobo 48h forced evacuation.",ac:"SSPDF",og:"Multiple"},{id:"i5",dt:"2026-02-08",a:8.28,o:31.60,tp:"control-change",s:"high",ti:"Lankien Control to SSPDF",d:"SSPDF declared control of Lankien town.",ac:"SSPDF",og:"UN/MSF"},{id:"i6",dt:"2026-01-01",a:7.7,o:31.3,tp:"health",s:"high",ti:"Cholera — Duk County",d:"~479 cholera cases, response by MSF France.",ac:"N/A",og:"MSF France"},{id:"i7",dt:"2025-12-15",a:8.3,o:31.8,tp:"displacement",s:"critical",ti:"280K+ Displaced",d:"Over 280,000 displaced across Jonglei.",ac:"SSPDF/SPLA-iO",og:"IOM/UNHCR"}],accessDenied:[{n:"Nyirol County",a:8.5,o:31.6,r:45000},{n:"Uror County",a:8.1,o:32.0,r:50000},{n:"Akobo County",a:7.8,o:33.0,r:55000}],bases:[{n:"Khartoum HQ",a:15.5,o:32.5,st:"Active",c:"Full ops"},{n:"Wau Forward",a:7.7,o:28.0,st:"Setup",c:"60%"},{n:"Juba Dist.",a:4.85,o:31.58,st:"Planning",c:"Distribution"}],notebook:[{id:'n1',author:'System',type:'update',text:'Event created from Jonglei briefing. See @i1 Lankien Hospital Airstrike.',ts:'2026-02-09T10:00:00Z'}],createdAt:'2026-02-09',updatedAt:'2026-02-16'})
 
-export function computeStats(ev) {
-  if (!ev) return [{value:'-',label:'Incidents',color:'#888'},{value:'-',label:'No-Access',color:'#888'},{value:'-',label:'IDPs',color:'#888'},{value:'-',label:'Health',color:'#888'}]
-  const inc=ev.incidents||[],ad=ev.accessDenied||[],disp=inc.find(i=>i.tp==='displacement'),hlth=inc.find(i=>i.tp==='health')
-  return [{value:String(inc.length),label:'Incidents',color:'#C73E1D'},{value:String(ad.length),label:'No-Access',color:'#9B2915'},{value:disp?'280K+':'0',label:'IDPs',color:'#D4820C'},{value:hlth?'479':'0',label:'Health',color:'#8B6914'}]
-}
-export function buildSystemPrompt(ev) {
-  if (!ev) return 'You are a Humanitarian Aid Corridor Planning AI. Respond in English.'
-  const inc=(ev.incidents||[]).map(i=>`${i.ti} (${i.dt}, ${i.s})`).join(', ')
-  const ad=(ev.accessDenied||[]).map(z=>z.n).join(', ')
-  const briefs=(ev.briefs||[]).filter(b=>!b.archived).map(b=>b.text).join(' | ')
-  return `You are a Humanitarian Corridor AI for "${ev.name}". Be concise.\nBRIEFS: ${briefs||ev.brief||'None'}\nINCIDENTS: ${inc||'None'}\nACCESS DENIED: ${ad||'None'}\nSEVERITY: ${ev.severity}`
-}
-export const BRIEF_ANALYSIS_PROMPT = `Analyze this humanitarian brief and extract incidents with geographic locations. Return ONLY valid JSON array. Each item: {"ti":"title","d":"description","a":lat,"o":lng,"s":"critical|high|medium|low","tp":"bombardment|looting|access-denial|control-change|health|displacement","dt":"YYYY-MM-DD","ac":"actor","og":"organization"}. If no specific location, estimate from context. Brief:`
+export function computeStats(ev){if(!ev)return[];const inc=ev.incidents||[],ad=ev.accessDenied||[];const disp=inc.find(i=>i.tp==='displacement'),hlth=inc.find(i=>i.tp==='health');return[{value:String(inc.length),label:'Incidents',color:'#C73E1D'},{value:String(ad.length),label:'No-Access',color:'#9B2915'},{value:disp?'280K+':'0',label:'IDPs',color:'#D4820C'},{value:hlth?'479':'0',label:'Health',color:'#8B6914'}]}
+export function computeTypeCounts(ev){const c={};(ev?.incidents||[]).forEach(i=>{c[i.tp]=(c[i.tp]||0)+1});return c}
+export function buildSystemPrompt(ev){if(!ev)return'You are a Humanitarian Corridor AI.';const inc=(ev.incidents||[]).map(i=>`${i.ti}(${i.dt},${i.s})`).join(', ');const briefs=(ev.briefs||[]).filter(b=>!b.archived).map(b=>b.text).join(' | ');return`You are a Humanitarian Corridor AI for "${ev.name}". Be concise, operational.\nBRIEFS: ${briefs||ev.brief||'None'}\nINCIDENTS: ${inc||'None'}\nACCESS DENIED: ${(ev.accessDenied||[]).map(z=>z.n).join(', ')||'None'}\nSEVERITY: ${ev.severity}\nProvide geographic coordinates when relevant. Format locations as [lat, lon].`}
+export const BRIEF_ANALYSIS_PROMPT=`Analyze this humanitarian brief. Extract ALL incidents with geographic coordinates. Return ONLY valid JSON array. Each item: {"ti":"title","d":"description","a":lat_number,"o":lng_number,"s":"critical|high|medium|low","tp":"bombardment|looting|access-denial|control-change|health|displacement|flood|earthquake","dt":"YYYY-MM-DD","ac":"actor","og":"organization"}. MUST have numeric a and o fields. Estimate coordinates from place names if not explicit. Brief:`
 
-export function renderEventToMap(Lf, event, animate=true) {
-  const g={corridor:Lf.layerGroup(),risks:Lf.layerGroup(),access:Lf.layerGroup(),incidents:Lf.layerGroup(),bases:Lf.layerGroup()}
-  if (event.corridor?.length) {
-    const cc=event.corridor.map(p=>[p.a,p.o]),severity=event.severity||'medium',dashSpeed=severity==='critical'?'12 6':'14 8'
-    const line=Lf.polyline(cc,{color:'#8B4513',weight:3,opacity:0.7,dashArray:dashSpeed})
-    if(animate)line.on('add',()=>{const e=line.getElement();if(e)e.style.animation=severity==='critical'?'dashFlowDense 1s linear infinite':'dashFlow 2s linear infinite'})
-    line.addTo(g.corridor);Lf.polyline(cc,{color:'#8B4513',weight:12,opacity:0.08}).addTo(g.corridor)
-    event.corridor.forEach(p=>{const c=p.t==='city'?'#3D2B1F':p.t==='base'?'#2E86AB':'#8B7355',r=p.t==='city'?7:p.t==='base'?6:4;Lf.circleMarker([p.a,p.o],{radius:r,fillColor:c,color:'#FFF',weight:2,fillOpacity:0.9}).bindPopup(`<h3>${p.n}</h3><p>${p.d}</p>`).addTo(g.corridor)})
+export function renderEventToMap(Lf,ev,anim=true){
+  const g={corridor:Lf.layerGroup(),risks:Lf.layerGroup(),access:Lf.layerGroup(),incidents:Lf.layerGroup(),bases:Lf.layerGroup(),drawings:Lf.layerGroup()}
+  if(ev.corridor?.length){
+    const cc=ev.corridor.map(p=>[p.a,p.o]);
+    const ln=Lf.polyline(cc,{color:'#8B4513',weight:3,opacity:.7,dashArray:ev.severity==='critical'?'12 6':'14 8'});
+    if(anim)ln.on('add',()=>{const e=ln.getElement();if(e)e.classList.add(ev.severity==='critical'?'anim-dash-fast':'anim-dash')});
+    ln.addTo(g.corridor);Lf.polyline(cc,{color:'#8B4513',weight:12,opacity:.08}).addTo(g.corridor);
+    ev.corridor.forEach(p=>{const c=p.t==='city'?'#3D2B1F':p.t==='base'?'#2E86AB':'#8B7355',r=p.t==='city'?7:p.t==='base'?6:4;
+    Lf.circleMarker([p.a,p.o],{radius:r,fillColor:c,color:'#FFF',weight:2,fillOpacity:.9}).bindPopup(`<b>${p.n}</b><br>${p.d}`).addTo(g.corridor)})
   }
-  ;(event.riskZones||[]).forEach(r=>{const sv=SEVERITY[r.s]||SEVERITY.medium;Lf.circle([r.a,r.o],{radius:r.r,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:0.08,dashArray:'6 4'}).bindPopup(`<h3>${r.n}</h3><span class='sv' style='background:${sv.bg};color:${sv.color}'>${r.s.toUpperCase()}</span><p>${r.d}</p>`).addTo(g.risks)})
-  ;(event.accessDenied||[]).forEach(z=>{Lf.circle([z.a,z.o],{radius:z.r,fillColor:'#C73E1D',color:'#C73E1D',weight:2,fillOpacity:0.1,dashArray:'8 4'}).addTo(g.access);Lf.marker([z.a,z.o],{icon:Lf.divIcon({className:'dl',html:`🚫 ${z.n}<br><span style='font-size:0.8em;opacity:0.7'>NO ACCESS</span>`,iconSize:[130,35]})}).addTo(g.access)})
-  ;(event.incidents||[]).forEach(i=>{const sv=SEVERITY[i.s]||SEVERITY.medium,ic=ICON_MAP[i.tp]||'⚠️';Lf.circleMarker([i.a,i.o],{radius:i.s==='critical'?10:8,fillColor:sv.color,color:'#FFF',weight:2,fillOpacity:0.85}).bindPopup(`<h3>${ic} ${i.ti}</h3><span class='sv' style='background:${sv.bg};color:${sv.color}'>${i.s.toUpperCase()}</span> <span class='mt'>${i.dt}</span><p>${i.d}</p><p class='mt'>⚔️ ${i.ac} &nbsp; 🏥 ${i.og}</p>`).addTo(g.incidents);if(i.s==='critical')Lf.circleMarker([i.a,i.o],{radius:20,fillColor:sv.color,color:sv.color,weight:1,fillOpacity:0.1}).addTo(g.incidents)})
-  ;(event.bases||[]).forEach(b=>{Lf.marker([b.a,b.o],{icon:Lf.divIcon({className:'dl',html:`<span style='color:#2E86AB;font-size:16px'>🏕️</span>`,iconSize:[20,20]})}).bindPopup(`<h3>🏕️ ${b.n}</h3><p><b>Status:</b> ${b.st}</p>`).addTo(g.bases)})
+  ;(ev.riskZones||[]).forEach(r=>{const sv=SEVERITY[r.s]||SEVERITY.medium;Lf.circle([r.a,r.o],{radius:r.r,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:.08,dashArray:'6 4'}).bindPopup(`<b>${r.n}</b> <span style="color:${sv.color}">${r.s.toUpperCase()}</span><br>${r.d}`).addTo(g.risks)})
+  ;(ev.accessDenied||[]).forEach(z=>{Lf.circle([z.a,z.o],{radius:z.r,fillColor:'#C73E1D',color:'#C73E1D',weight:2,fillOpacity:.1,dashArray:'8 4'}).addTo(g.access);Lf.marker([z.a,z.o],{icon:Lf.divIcon({className:'dl',html:`🚫 ${z.n}`,iconSize:[120,25]})}).addTo(g.access)})
+  ;(ev.incidents||[]).forEach(i=>{const sv=SEVERITY[i.s]||SEVERITY.medium,ic=ICON_MAP[i.tp]||'⚠️';
+    const cm=Lf.circleMarker([i.a,i.o],{radius:i.s==='critical'?10:8,fillColor:sv.color,color:'#FFF',weight:2,fillOpacity:.85}).bindPopup(`<b>${ic} ${i.ti}</b><br><span style="color:${sv.color}">${i.s.toUpperCase()}</span> · ${i.dt}<br>${i.d}<br><small>⚔️ ${i.ac} · 🏥 ${i.og}</small>`);
+    if(anim&&i.s==='critical')cm.on('add',()=>{const e=cm.getElement();if(e)e.classList.add('anim-pulse')});
+    cm.addTo(g.incidents);if(i.s==='critical')Lf.circleMarker([i.a,i.o],{radius:20,fillColor:sv.color,color:sv.color,weight:1,fillOpacity:.1}).addTo(g.incidents)})
+  ;(ev.bases||[]).forEach(b=>{Lf.marker([b.a,b.o],{icon:Lf.divIcon({className:'dl',html:`<span style='color:#2E86AB;font-size:16px'>🏕️</span>`,iconSize:[20,20]})}).bindPopup(`<b>🏕️ ${b.n}</b><br>${b.st}`).addTo(g.bases)})
+  ;(ev.drawings||[]).forEach(d=>{if(d.type==='circle')Lf.circle([d.a,d.o],{radius:d.r||50000,fillColor:d.color||'#C73E1D',color:d.color||'#C73E1D',weight:2,fillOpacity:.12,dashArray:'8 4'}).bindPopup(`<b>${d.label||'Zone'}</b>`).addTo(g.drawings)})
   return g
 }
-
-// Export helpers
-export function eventToGeoJSON(ev) {
-  const features=[];(ev.corridor||[]).forEach(p=>features.push({type:'Feature',geometry:{type:'Point',coordinates:[p.o,p.a]},properties:{name:p.n,type:'waypoint',subtype:p.t,description:p.d}}));if(ev.corridor?.length>1)features.push({type:'Feature',geometry:{type:'LineString',coordinates:ev.corridor.map(p=>[p.o,p.a])},properties:{name:ev.name+' Corridor',type:'corridor'}});(ev.incidents||[]).forEach(i=>features.push({type:'Feature',geometry:{type:'Point',coordinates:[i.o,i.a]},properties:{name:i.ti,type:'incident',severity:i.s,incidentType:i.tp,date:i.dt,description:i.d,actor:i.ac,organization:i.og}}));(ev.riskZones||[]).forEach(r=>features.push({type:'Feature',geometry:{type:'Point',coordinates:[r.o,r.a]},properties:{name:r.n,type:'risk_zone',severity:r.s,radius:r.r}}));(ev.accessDenied||[]).forEach(z=>features.push({type:'Feature',geometry:{type:'Point',coordinates:[z.o,z.a]},properties:{name:z.n,type:'access_denied',radius:z.r}}));(ev.bases||[]).forEach(b=>features.push({type:'Feature',geometry:{type:'Point',coordinates:[b.o,b.a]},properties:{name:b.n,type:'base',status:b.st}}));return{type:'FeatureCollection',properties:{event:ev.name,exported:new Date().toISOString()},features}
-}
-export function eventToCSV(ev) {
-  const rows=[['Type','Name','Lat','Lon','Severity','Date','Description','Actor','Org']];(ev.incidents||[]).forEach(i=>rows.push(['Incident',i.ti,i.a,i.o,i.s,i.dt,`"${(i.d||'').replace(/"/g,'""')}"`,i.ac,i.og]));(ev.corridor||[]).forEach(p=>rows.push(['Waypoint',p.n,p.a,p.o,'','',`"${(p.d||'').replace(/"/g,'""')}"`,'','']));(ev.riskZones||[]).forEach(r=>rows.push(['Risk',r.n,r.a,r.o,r.s,'',`"${(r.d||'').replace(/"/g,'""')}"`,'','']));return rows.map(r=>r.join(',')).join('\n')
-}
-export function eventToReport(ev) {
-  const l=[];l.push(`# ${ev.name}`);l.push(`**Status:** ${ev.status} | **Severity:** ${ev.severity?.toUpperCase()} | **Updated:** ${ev.updatedAt}\n`);l.push(`## Brief\n${ev.brief||'N/A'}\n`);if((ev.briefs||[]).length){l.push(`## Briefs`);ev.briefs.forEach(b=>l.push(`- **[${new Date(b.ts).toLocaleDateString()}]** ${b.text}${b.archived?' *(archived)*':''}`));l.push('')}if((ev.incidents||[]).length){l.push(`## Incidents (${ev.incidents.length})`);ev.incidents.forEach(i=>l.push(`- **${i.ti}** (${i.dt}) — ${i.s.toUpperCase()} — ${i.d}`));l.push('')}if((ev.notebook||[]).length){l.push(`## Notes`);ev.notebook.forEach(n=>l.push(`- **${n.author}:** ${n.text}`));l.push('')}l.push(`---\n*Corridor Planner v2.0 — ${new Date().toISOString().slice(0,10)}*`);return l.join('\n')
-}
-export function encodeShare(ev) {
-  const p={n:ev.name,s:ev.severity,st:ev.status,b:ev.brief,bs:(ev.briefs||[]).filter(x=>!x.archived).map(x=>({t:x.text,d:x.ts})),r:ev.region,c:ev.corridor,rz:ev.riskZones,i:(ev.incidents||[]).map(x=>({id:x.id,dt:x.dt,a:x.a,o:x.o,tp:x.tp,s:x.s,ti:x.ti,d:x.d,ac:x.ac,og:x.og})),ad:ev.accessDenied,ba:ev.bases,nb:(ev.notebook||[]).slice(-20).map(x=>({a:x.author,t:x.text,d:x.ts}))};return btoa(unescape(encodeURIComponent(JSON.stringify(p))))
-}
-export function decodeShare(encoded) {
-  try{const p=JSON.parse(decodeURIComponent(escape(atob(encoded))));return createEvent({id:'shared_'+Date.now(),name:p.n||'Shared',severity:p.s||'medium',status:p.st||'shared',brief:p.b||'',briefs:(p.bs||[]).map((x,i)=>({id:'sb_'+i,text:x.t,ts:x.d,archived:false})),region:p.r,corridor:p.c||[],riskZones:p.rz||[],incidents:(p.i||[]).map(x=>({...x})),accessDenied:p.ad||[],bases:p.ba||[],notebook:(p.nb||[]).map((x,i)=>({id:'sn_'+i,author:x.a||'Shared',type:'note',text:x.t,ts:x.d}))})}catch(e){return null}
-}
-
-// Overpass API query builder
-export function buildOverpassQuery(type, bounds) {
-  const [s,w,n,e] = [bounds.getSouth(), bounds.getWest(), bounds.getNorth(), bounds.getEast()]
-  const bbox = `${s},${w},${n},${e}`
-  const queries = {
-    hospitals: `[out:json][timeout:15];(node["amenity"="hospital"](${bbox});way["amenity"="hospital"](${bbox}););out center 50;`,
-    water: `[out:json][timeout:15];(node["amenity"="drinking_water"](${bbox});node["man_made"="water_well"](${bbox});node["natural"="spring"](${bbox}););out 50;`,
-    roads: `[out:json][timeout:15];way["highway"~"trunk|primary|secondary"](${bbox});out geom 100;`,
-  }
-  return queries[type] || ''
-}
+export function eventToGeoJSON(ev){const f=[];(ev.incidents||[]).forEach(i=>f.push({type:'Feature',geometry:{type:'Point',coordinates:[i.o,i.a]},properties:{name:i.ti,severity:i.s,type:i.tp,date:i.dt,description:i.d,actor:i.ac,org:i.og}}));(ev.corridor||[]).forEach(p=>f.push({type:'Feature',geometry:{type:'Point',coordinates:[p.o,p.a]},properties:{name:p.n,type:'waypoint'}}));if(ev.corridor?.length>1)f.push({type:'Feature',geometry:{type:'LineString',coordinates:ev.corridor.map(p=>[p.o,p.a])},properties:{name:ev.name+' Corridor',type:'corridor'}});return{type:'FeatureCollection',properties:{event:ev.name,exported:new Date().toISOString()},features:f}}
+export function eventToCSV(ev){const r=[['Type','Name','Lat','Lon','Severity','Date','Description','Actor','Org']];(ev.incidents||[]).forEach(i=>r.push(['Incident',`"${i.ti}"`,i.a,i.o,i.s,i.dt,`"${(i.d||'').replace(/"/g,'""')}"`,i.ac,i.og]));(ev.corridor||[]).forEach(p=>r.push(['Waypoint',p.n,p.a,p.o,'','',`"${p.d||''}"`,'-','-']));return r.map(x=>x.join(',')).join('\n')}
+export function eventToReport(ev){const l=[];l.push(`# ${ev.name}\n**${ev.severity?.toUpperCase()}** | ${ev.status} | Updated: ${ev.updatedAt}\n`);l.push(`## Brief\n${ev.brief||'N/A'}\n`);if((ev.briefs||[]).length){l.push('## Briefs Timeline');ev.briefs.forEach(b=>l.push(`- [${new Date(b.ts).toLocaleDateString()}] ${b.text}${b.archived?' *(archived)*':''}`));l.push('')}if((ev.incidents||[]).length){l.push(`## Incidents (${ev.incidents.length})`);ev.incidents.forEach(i=>l.push(`- **${i.ti}** (${i.dt}) — ${i.s.toUpperCase()} — ${i.d}`));l.push('')}if((ev.notebook||[]).length){l.push('## Field Notes');ev.notebook.forEach(n=>l.push(`- [${n.author}] ${n.text}`));l.push('')}l.push(`---\n*Corridor Planner v3 — ${new Date().toISOString().slice(0,10)}*`);return l.join('\n')}
+export function encodeShare(ev,pw=''){const p={n:ev.name,s:ev.severity,st:ev.status,b:ev.brief,tp:ev.type,bs:(ev.briefs||[]).filter(x=>!x.archived).map(x=>({t:x.text,d:x.ts})),r:ev.region,c:ev.corridor,rz:ev.riskZones,i:(ev.incidents||[]).map(x=>({id:x.id,dt:x.dt,a:x.a,o:x.o,tp:x.tp,s:x.s,ti:x.ti,d:x.d,ac:x.ac,og:x.og})),ad:ev.accessDenied,ba:ev.bases,dr:ev.drawings||[],nb:(ev.notebook||[]).slice(-10).map(x=>({a:x.author,t:x.text})),pw};return btoa(unescape(encodeURIComponent(JSON.stringify(p))))}
+export function decodeShare(enc){try{const p=JSON.parse(decodeURIComponent(escape(atob(enc))));return{event:createEvent({id:'sh_'+Date.now(),name:p.n||'Shared',type:p.tp||'corridor',severity:p.s||'medium',status:p.st||'shared',brief:p.b||'',briefs:(p.bs||[]).map((x,i)=>({id:'sb_'+i,text:x.t,ts:x.d,archived:false})),region:p.r||{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]},corridor:p.c||[],riskZones:p.rz||[],incidents:(p.i||[]).map(x=>({...x})),accessDenied:p.ad||[],bases:p.ba||[],drawings:p.dr||[],notebook:(p.nb||[]).map((x,i)=>({id:'sn_'+i,author:x.a||'Shared',type:'note',text:x.t,ts:new Date().toISOString()}))}),pw:p.pw||''}}catch(e){console.error('Share decode error:',e);return null}}
+export function buildOverpassQuery(type,bounds){const[s,w,n,e]=[bounds.getSouth(),bounds.getWest(),bounds.getNorth(),bounds.getEast()];const bb=`${s},${w},${n},${e}`;return{hospitals:`[out:json][timeout:25];(node["amenity"="hospital"](${bb});way["amenity"="hospital"](${bb});node["amenity"="clinic"](${bb}););out center body 100;`,water:`[out:json][timeout:25];(node["amenity"="drinking_water"](${bb});node["man_made"="water_well"](${bb});node["natural"="spring"](${bb});node["man_made"="water_tower"](${bb}););out body 100;`,roads:`[out:json][timeout:25];way["highway"~"trunk|primary|secondary"](${bb});out geom 200;`}[type]||''}
