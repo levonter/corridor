@@ -32,6 +32,8 @@
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{height:100%;overflow:hidden;font-family:'Source Serif 4',Georgia,serif;background:var(--bg-primary);color:var(--text-primary);font-size:var(--fs);transition:background .3s,color .3s}
+[dir="rtl"] .panel{border-right:none;border-left:1px solid var(--border-primary)}
+[dir="rtl"] .sidebar-toggle{right:auto;left:-24px;border-left:1px solid var(--border-primary);border-right:none;border-radius:8px 0 0 8px}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--scrollbar-track)}::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:10px}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
@@ -39,20 +41,13 @@ html,body,#root{height:100%;overflow:hidden;font-family:'Source Serif 4',Georgia
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes dashFlow{to{stroke-dashoffset:-40}}
 @keyframes dashFlowDense{to{stroke-dashoffset:-20}}
-@keyframes glowPulse{0%,100%{r:10;opacity:.85}50%{r:13;opacity:1}}
-@keyframes glowPulseCritical{0%,100%{r:12;opacity:.9}50%{r:16;opacity:1}}
-@keyframes ringPulse{0%{r:18;opacity:.15}100%{r:30;opacity:0}}
 
 .app-layout{display:flex;height:100vh;width:100vw}
 .panel{width:340px;min-width:340px;display:flex;flex-direction:column;background:var(--bg-secondary);border-right:1px solid var(--border-primary);z-index:100;transition:width .3s ease,min-width .3s ease,opacity .3s ease;position:relative}
 .panel.collapsed{width:0;min-width:0;overflow:hidden;opacity:0;border-right:none}
 .canvas{flex:1;position:relative;overflow:hidden}
-
-/* Sidebar toggle on right edge of panel */
 .sidebar-toggle{position:absolute;top:50%;right:-24px;transform:translateY(-50%);z-index:201;width:24px;height:48px;background:var(--bg-secondary);border:1px solid var(--border-primary);border-left:none;border-radius:0 8px 8px 0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;transition:all .2s;box-shadow:var(--shadow-sm)}
 .sidebar-toggle:hover{background:var(--bg-hover);color:var(--text-primary)}
-/* When collapsed, toggle lives on left edge of canvas */
-.panel.collapsed+.canvas .sidebar-toggle-float{display:flex}
 
 .leaflet-popup-content-wrapper{border-radius:10px!important;font-family:'Source Serif 4',Georgia,serif!important;box-shadow:var(--shadow-lg)!important;background:var(--popup-bg)!important}
 .leaflet-popup-content{font-size:13px!important;line-height:1.6!important;color:var(--text-primary)!important;margin:12px 14px!important}
@@ -62,14 +57,15 @@ html,body,#root{height:100%;overflow:hidden;font-family:'Source Serif 4',Georgia
 .leaflet-popup-tip{background:var(--popup-bg)!important}
 .dl{background:none!important;border:none!important;box-shadow:none!important;color:var(--danger);font-weight:700;font-size:11px;font-family:'Source Serif 4',Georgia,serif;text-align:center;white-space:nowrap}
 
-/* Map animations */
-.map-anim-line{animation:dashFlow 2s linear infinite}
-.map-anim-line-dense{animation:dashFlowDense 1s linear infinite}
+/* Map click indicator */
+.map-click-marker{animation:pulse 1.5s infinite}
 
-@media(max-width:860px){
-  .app-layout{flex-direction:column}
-  .panel{width:100%!important;min-width:unset!important;max-height:50vh;border-right:none;border-bottom:1px solid var(--border-primary)}
-  .panel.collapsed{max-height:0}
-  .canvas{min-height:50vh}
-}
+@media(max-width:860px){.app-layout{flex-direction:column}.panel{width:100%!important;min-width:unset!important;max-height:50vh;border-right:none;border-bottom:1px solid var(--border-primary)}.panel.collapsed{max-height:0}.canvas{min-height:50vh}}
 @media(max-width:480px){.panel{max-height:45vh}.canvas{min-height:55vh}}
+
+/* Print */
+@media print{
+  .panel,.sidebar-toggle,button,.leaflet-control-zoom{display:none!important}
+  .canvas{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important}
+  .app-layout{display:block!important}
+}
