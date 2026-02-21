@@ -1,12 +1,12 @@
 export const ICON_MAP={bombardment:"💥",looting:"🔥","access-denial":"🚫","control-change":"⚑",health:"🦠",displacement:"👥",flood:"🌊",earthquake:"📐"}
-export const SEVERITY={critical:{color:"#C73E1D",bg:"#C73E1D22"},high:{color:"#D4820C",bg:"#D4820C1A"},medium:{color:"#A69220",bg:"#A692201A"},low:{color:"#3B7A57",bg:"#3B7A571A"}}
+export const SEVERITY={critical:{color:"#E8553A",bg:"#E8553A25",},high:{color:"#E89B2A",bg:"#E89B2A20"},medium:{color:"#C9A84C",bg:"#C9A84C1A"},low:{color:"#5AAE7A",bg:"#5AAE7A1A"}}
 export const BASE_LAYERS=[{id:"osm",name:"OpenStreetMap"},{id:"hot",name:"HOT Humanitarian"},{id:"esri",name:"ESRI Satellite"},{id:"topo",name:"OpenTopoMap"}]
 export const INC_TYPES=['bombardment','looting','access-denial','control-change','health','displacement','flood','earthquake']
 export const SEV_LEVELS=['critical','high','medium','low']
 export const EVENT_TYPES=[{id:'corridor',name:'Corridor',icon:'🛤️'},{id:'crisis',name:'Crisis',icon:'🚨'},{id:'displacement',name:'Displacement',icon:'👥'},{id:'health',name:'Health Emergency',icon:'🏥'},{id:'natural',name:'Natural Disaster',icon:'🌊'},{id:'custom',name:'Custom',icon:'📌'}]
 export const COPERNICUS_INSTANCE="2ac66286-c514-43e6-9f14-a15dc697315a"
 
-export function createEvent(ov={}){return{id:'evt_'+Date.now(),name:'New Event',type:'corridor',status:'active',severity:'medium',briefs:[],brief:'',region:{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]},corridor:[],riskZones:[],incidents:[],accessDenied:[],bases:[],drawings:[],notebook:[],createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString().slice(0,10),...ov}}
+export function createEvent(ov={}){return{id:'evt_'+Date.now(),name:'New Event',type:'corridor',status:'active',severity:'medium',briefs:[],brief:'',region:{center:[20,0],zoom:2,bounds:null},corridor:[],riskZones:[],incidents:[],accessDenied:[],bases:[],drawings:[],notebook:[],createdAt:new Date().toISOString().slice(0,10),updatedAt:new Date().toISOString().slice(0,10),...ov}}
 
 export const SUDAN_EVENT=createEvent({id:'evt_sudan_ss',name:'Sudan → South Sudan Corridor',type:'corridor',status:'active',severity:'critical',briefs:[{id:'b1',text:'Khartoum to Juba corridor (1,850km). Jonglei: 280K+ displaced, 3 counties access-denied, cholera in Duk County.',ts:'2026-02-09T10:00:00Z',archived:false},{id:'b2',text:'SSPDF declared control of Lankien. New commissioner appointed. UN/MSF advocating for humanitarian flights. Cholera response ongoing by MSF France.',ts:'2026-02-12T08:00:00Z',archived:false}],brief:'Khartoum to Juba corridor (1,850km). Jonglei: 280K+ displaced, 3 counties access-denied, cholera in Duk County.',region:{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]},corridor:[{n:"Khartoum",a:15.5,o:32.5,t:"city",d:"Origin — Coordination HQ"},{n:"El-Obeid",a:13.18,o:30.22,t:"wp",d:"Logistics transfer"},{n:"Kadugli",a:11.0,o:29.7,t:"wp",d:"South Kordofan"},{n:"Abyei",a:9.6,o:28.4,t:"rz",d:"Disputed territory"},{n:"Aweil",a:8.77,o:27.39,t:"wp",d:"N. Bahr el Ghazal"},{n:"Wau",a:7.7,o:28.0,t:"base",d:"Forward base"},{n:"Rumbek",a:6.8,o:29.7,t:"wp",d:"Lakes — Flood risk"},{n:"Bor",a:6.2,o:31.56,t:"wp",d:"Nile crossing"},{n:"Juba",a:4.85,o:31.58,t:"city",d:"Destination"}],riskZones:[{n:"South Kordofan",a:11.5,o:29.5,r:80000,s:"high",d:"Active conflict"},{n:"Abyei Disputed",a:9.6,o:28.8,r:70000,s:"critical",d:"Sovereignty dispute"},{n:"Sudd Flood",a:7.0,o:30.0,r:100000,s:"medium",d:"Jun–Oct impassable"},{n:"Jonglei Conflict",a:8.0,o:31.5,r:120000,s:"critical",d:"280K+ displaced"}],incidents:[{id:"i1",dt:"2026-02-03",a:8.28,o:31.60,tp:"bombardment",s:"critical",ti:"Lankien Hospital Airstrike",d:"OCA hospital warehouse damaged by aerial bombardment.",ac:"SSPDF",og:"MSF Holland"},{id:"i2",dt:"2026-02-03",a:8.45,o:31.75,tp:"looting",s:"high",ti:"Pieri PHCC Looted",d:"OCA Pieri PHCC looted by armed men.",ac:"Unknown",og:"MSF Holland"},{id:"i3",dt:"2026-02-04",a:8.60,o:32.20,tp:"looting",s:"high",ti:"Walgak Office Burned",d:"Save the Children office burned.",ac:"Unknown",og:"Save the Children"},{id:"i4",dt:"2026-01-26",a:8.0,o:31.5,tp:"access-denial",s:"critical",ti:"Evacuation Order",d:"Nyirol/Uror/Akobo 48h forced evacuation.",ac:"SSPDF",og:"Multiple"},{id:"i5",dt:"2026-02-08",a:8.28,o:31.60,tp:"control-change",s:"high",ti:"Lankien Control to SSPDF",d:"SSPDF declared control of Lankien town.",ac:"SSPDF",og:"UN/MSF"},{id:"i6",dt:"2026-01-01",a:7.7,o:31.3,tp:"health",s:"high",ti:"Cholera — Duk County",d:"~479 cholera cases, response by MSF France.",ac:"N/A",og:"MSF France"},{id:"i7",dt:"2025-12-15",a:8.3,o:31.8,tp:"displacement",s:"critical",ti:"280K+ Displaced",d:"Over 280,000 displaced across Jonglei.",ac:"SSPDF/SPLA-iO",og:"IOM/UNHCR"}],accessDenied:[{n:"Nyirol County",a:8.5,o:31.6,r:45000},{n:"Uror County",a:8.1,o:32.0,r:50000},{n:"Akobo County",a:7.8,o:33.0,r:55000}],bases:[{n:"Khartoum HQ",a:15.5,o:32.5,st:"Active",c:"Full ops"},{n:"Wau Forward",a:7.7,o:28.0,st:"Setup",c:"60%"},{n:"Juba Dist.",a:4.85,o:31.58,st:"Planning",c:"Distribution"}],notebook:[{id:'n1',author:'System',type:'update',text:'Event created from Jonglei briefing. See @i1 Lankien Hospital Airstrike.',ts:'2026-02-09T10:00:00Z'}],createdAt:'2026-02-09',updatedAt:'2026-02-16'})
 
@@ -20,21 +20,24 @@ export function renderEventToMap(Lf,ev,anim=true,onViewDetail){
   const vdBtn=(type,id)=>onViewDetail?`<br><button onclick="window.__cpViewDetail('${type}','${id}')" style="margin-top:6px;padding:4px 12px;border-radius:5px;border:1px solid #C9A84C;background:transparent;color:#C9A84C;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;width:100%">View Details →</button>`:''
   if(ev.corridor?.length){
     const cc=ev.corridor.map(p=>[p.a,p.o]);
-    const ln=Lf.polyline(cc,{color:'#8B4513',weight:3,opacity:.7,dashArray:ev.severity==='critical'?'12 6':'14 8'});
+    const ln=Lf.polyline(cc,{color:'#D4754E',weight:3.5,opacity:.8,dashArray:ev.severity==='critical'?'10 6':'14 8'});
     if(anim)ln.on('add',()=>{const e=ln.getElement();if(e)e.classList.add(ev.severity==='critical'?'anim-dash-fast':'anim-dash')});
-    ln.addTo(g.corridor);Lf.polyline(cc,{color:'#8B4513',weight:12,opacity:.08}).addTo(g.corridor);
-    ev.corridor.forEach((p,pi)=>{const c=p.t==='city'?'#3D2B1F':p.t==='base'?'#2E86AB':'#8B7355',r=p.t==='city'?8:p.t==='base'?7:5;
+    ln.addTo(g.corridor);Lf.polyline(cc,{color:'#D4754E',weight:16,opacity:.06}).addTo(g.corridor);
+    ev.corridor.forEach((p,pi)=>{const c=p.t==='city'?'#E0DCD4':p.t==='base'?'#4BA8CC':'#A8A0B0',r=p.t==='city'?9:p.t==='base'?7:5;
     Lf.circleMarker([p.a,p.o],{radius:r,fillColor:c,color:'#FFF',weight:2,fillOpacity:.9}).bindPopup(`<b>${p.n}</b><br><span style="color:#8B7355">${p.d}</span>${vdBtn('waypoint','wp_'+pi)}`).addTo(g.corridor)})
   }
-  ;(ev.riskZones||[]).forEach((r,ri)=>{const sv=SEVERITY[r.s]||SEVERITY.medium;Lf.circle([r.a,r.o],{radius:r.r,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:.08,dashArray:'6 4'}).bindPopup(`<b>${r.n}</b> <span style="color:${sv.color};font-weight:700">${r.s.toUpperCase()}</span><br>${r.d}${vdBtn('risk','rz_'+ri)}`).addTo(g.risks)})
-  ;(ev.accessDenied||[]).forEach(z=>{Lf.circle([z.a,z.o],{radius:z.r,fillColor:'#C73E1D',color:'#C73E1D',weight:2,fillOpacity:.1,dashArray:'8 4'}).addTo(g.access);Lf.marker([z.a,z.o],{icon:Lf.divIcon({className:'dl',html:`🚫 ${z.n}`,iconSize:[120,25]})}).addTo(g.access)})
+  ;(ev.riskZones||[]).forEach((r,ri)=>{const sv=SEVERITY[r.s]||SEVERITY.medium;Lf.circle([r.a,r.o],{radius:r.r,fillColor:sv.color,color:sv.color,weight:2,fillOpacity:.12,dashArray:'8 5'}).bindPopup(`<b>${r.n}</b> <span style="color:${sv.color};font-weight:700">${r.s.toUpperCase()}</span><br>${r.d}${vdBtn('risk','rz_'+ri)}`).addTo(g.risks)})
+  ;(ev.accessDenied||[]).forEach(z=>{Lf.circle([z.a,z.o],{radius:z.r,fillColor:'#E8553A',color:'#E8553A',weight:2.5,fillOpacity:.15,dashArray:'10 5'}).addTo(g.access);Lf.marker([z.a,z.o],{icon:Lf.divIcon({className:'dl',html:`<span style="color:#E8553A;font-size:13px;font-weight:800;text-shadow:0 0 8px rgba(232,85,58,.6)">🚫 ${z.n}</span>`,iconSize:[140,25]})}).addTo(g.access)})
   ;(ev.incidents||[]).forEach((i,idx)=>{const sv=SEVERITY[i.s]||SEVERITY.medium,ic=ICON_MAP[i.tp]||'⚠️';
     const baseR={critical:14,high:10,medium:8,low:6}[i.s]||8;
-    const cm=Lf.circleMarker([i.a,i.o],{radius:baseR,fillColor:sv.color,color:'#FFF',weight:2.5,fillOpacity:.9}).bindPopup(`<b>${ic} ${i.ti}</b><br><span style="color:${sv.color};font-weight:700">${i.s.toUpperCase()}</span> · ${i.dt}<br>${i.d}<br><small>⚔️ ${i.ac} · 🏥 ${i.og}</small>${vdBtn('incident',i.id)}`);
+    const cm=Lf.circleMarker([i.a,i.o],{radius:baseR,fillColor:sv.color,color:sv.color,weight:3,fillOpacity:.95}).bindPopup(`<b>${ic} ${i.ti}</b><br><span style="color:${sv.color};font-weight:700">${i.s.toUpperCase()}</span> · ${i.dt}<br>${i.d}<br><small>⚔️ ${i.ac} · 🏥 ${i.og}</small>${vdBtn('incident',i.id)}`);
     if(anim&&(i.s==='critical'||i.s==='high'))cm.on('add',()=>{const e=cm.getElement();if(e)e.classList.add('anim-pulse')});
     cm.addTo(g.incidents);
+    // Outer glow ring
     const glowR={critical:40000,high:25000,medium:15000,low:8000}[i.s]||15000;
-    Lf.circle([i.a,i.o],{radius:glowR,fillColor:sv.color,color:sv.color,weight:1,fillOpacity:.07,dashArray:'4 3'}).addTo(g.incidents)})
+    Lf.circle([i.a,i.o],{radius:glowR,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:.08,dashArray:'6 4'}).addTo(g.incidents);
+    // Inner bright ring for critical/high
+    if(i.s==='critical'||i.s==='high')Lf.circleMarker([i.a,i.o],{radius:baseR+6,fillColor:'transparent',color:sv.color,weight:1.5,fillOpacity:0,opacity:.5}).addTo(g.incidents)})
   // Dashed lines between nearby/related incidents (same region, <200km apart)
   const incs=ev.incidents||[];
   for(let a=0;a<incs.length;a++){for(let b=a+1;b<incs.length;b++){
@@ -42,7 +45,7 @@ export function renderEventToMap(Lf,ev,anim=true,onViewDetail){
     if(d<2.5){// ~250km rough threshold
       const maxSev=['critical','high','medium','low'].indexOf(incs[a].s)<=['critical','high','medium','low'].indexOf(incs[b].s)?incs[a].s:incs[b].s;
       const col=(SEVERITY[maxSev]||SEVERITY.medium).color;
-      Lf.polyline([[incs[a].a,incs[a].o],[incs[b].a,incs[b].o]],{color:col,weight:1.5,opacity:.35,dashArray:'6 4'}).addTo(g.incidents)
+      Lf.polyline([[incs[a].a,incs[a].o],[incs[b].a,incs[b].o]],{color:col,weight:2,opacity:.45,dashArray:'6 4'}).addTo(g.incidents)
     }
   }}
   ;(ev.bases||[]).forEach((b,bi)=>{Lf.marker([b.a,b.o],{icon:Lf.divIcon({className:'dl',html:`<span style='color:#2E86AB;font-size:16px'>🏕️</span>`,iconSize:[20,20]})}).bindPopup(`<b>🏕️ ${b.n}</b><br>${b.st} · ${b.c||''}${vdBtn('base','ba_'+bi)}`).addTo(g.bases)})
