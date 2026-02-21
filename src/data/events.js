@@ -15,27 +15,26 @@ export function computeTypeCounts(ev){const c={};(ev?.incidents||[]).forEach(i=>
 export function buildSystemPrompt(ev){if(!ev)return'You are a Humanitarian Corridor AI.';const inc=(ev.incidents||[]).map(i=>`${i.ti}(${i.dt},${i.s})`).join(', ');const briefs=(ev.briefs||[]).filter(b=>!b.archived).map(b=>b.text).join(' | ');return`You are a Humanitarian Corridor AI for "${ev.name}". Be concise, operational.\nBRIEFS: ${briefs||ev.brief||'None'}\nINCIDENTS: ${inc||'None'}\nACCESS DENIED: ${(ev.accessDenied||[]).map(z=>z.n).join(', ')||'None'}\nSEVERITY: ${ev.severity}\nProvide geographic coordinates when relevant. Format locations as [lat, lon].`}
 export const BRIEF_ANALYSIS_PROMPT=`Analyze this humanitarian brief. Extract ALL incidents with geographic coordinates. Return ONLY valid JSON array. Each item: {"ti":"title","d":"description","a":lat_number,"o":lng_number,"s":"critical|high|medium|low","tp":"bombardment|looting|access-denial|control-change|health|displacement|flood|earthquake","dt":"YYYY-MM-DD","ac":"actor","og":"organization"}. MUST have numeric a and o fields. Estimate coordinates from place names if not explicit. Brief:`
 
-export function renderEventToMap(Lf,ev,anim=true){
+export function renderEventToMap(Lf,ev,anim=true,onViewDetail){
   const g={corridor:Lf.layerGroup(),risks:Lf.layerGroup(),access:Lf.layerGroup(),incidents:Lf.layerGroup(),bases:Lf.layerGroup(),drawings:Lf.layerGroup()}
+  const vdBtn=(type,id)=>onViewDetail?`<br><button onclick="window.__cpViewDetail('${type}','${id}')" style="margin-top:6px;padding:4px 12px;border-radius:5px;border:1px solid #C9A84C;background:transparent;color:#C9A84C;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;width:100%">View Details →</button>`:''
   if(ev.corridor?.length){
     const cc=ev.corridor.map(p=>[p.a,p.o]);
     const ln=Lf.polyline(cc,{color:'#8B4513',weight:3,opacity:.7,dashArray:ev.severity==='critical'?'12 6':'14 8'});
     if(anim)ln.on('add',()=>{const e=ln.getElement();if(e)e.classList.add(ev.severity==='critical'?'anim-dash-fast':'anim-dash')});
     ln.addTo(g.corridor);Lf.polyline(cc,{color:'#8B4513',weight:12,opacity:.08}).addTo(g.corridor);
-    ev.corridor.forEach(p=>{const c=p.t==='city'?'#3D2B1F':p.t==='base'?'#2E86AB':'#8B7355',r=p.t==='city'?7:p.t==='base'?6:4;
-    Lf.circleMarker([p.a,p.o],{radius:r,fillColor:c,color:'#FFF',weight:2,fillOpacity:.9}).bindPopup(`<b>${p.n}</b><br>${p.d}`).addTo(g.corridor)})
+    ev.corridor.forEach((p,pi)=>{const c=p.t==='city'?'#3D2B1F':p.t==='base'?'#2E86AB':'#8B7355',r=p.t==='city'?8:p.t==='base'?7:5;
+    Lf.circleMarker([p.a,p.o],{radius:r,fillColor:c,color:'#FFF',weight:2,fillOpacity:.9}).bindPopup(`<b>${p.n}</b><br><span style="color:#8B7355">${p.d}</span>${vdBtn('waypoint','wp_'+pi)}`).addTo(g.corridor)})
   }
-  ;(ev.riskZones||[]).forEach(r=>{const sv=SEVERITY[r.s]||SEVERITY.medium;Lf.circle([r.a,r.o],{radius:r.r,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:.08,dashArray:'6 4'}).bindPopup(`<b>${r.n}</b> <span style="color:${sv.color}">${r.s.toUpperCase()}</span><br>${r.d}`).addTo(g.risks)})
+  ;(ev.riskZones||[]).forEach((r,ri)=>{const sv=SEVERITY[r.s]||SEVERITY.medium;Lf.circle([r.a,r.o],{radius:r.r,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:.08,dashArray:'6 4'}).bindPopup(`<b>${r.n}</b> <span style="color:${sv.color};font-weight:700">${r.s.toUpperCase()}</span><br>${r.d}${vdBtn('risk','rz_'+ri)}`).addTo(g.risks)})
   ;(ev.accessDenied||[]).forEach(z=>{Lf.circle([z.a,z.o],{radius:z.r,fillColor:'#C73E1D',color:'#C73E1D',weight:2,fillOpacity:.1,dashArray:'8 4'}).addTo(g.access);Lf.marker([z.a,z.o],{icon:Lf.divIcon({className:'dl',html:`🚫 ${z.n}`,iconSize:[120,25]})}).addTo(g.access)})
   ;(ev.incidents||[]).forEach((i,idx)=>{const sv=SEVERITY[i.s]||SEVERITY.medium,ic=ICON_MAP[i.tp]||'⚠️';
-    // Severity-based radius: critical=12, high=9, medium=7, low=5
-    const baseR={critical:12,high:9,medium:7,low:5}[i.s]||7;
-    const cm=Lf.circleMarker([i.a,i.o],{radius:baseR,fillColor:sv.color,color:'#FFF',weight:2,fillOpacity:.85}).bindPopup(`<b>${ic} ${i.ti}</b><br><span style="color:${sv.color}">${i.s.toUpperCase()}</span> · ${i.dt}<br>${i.d}<br><small>⚔️ ${i.ac} · 🏥 ${i.og}</small>`);
+    const baseR={critical:14,high:10,medium:8,low:6}[i.s]||8;
+    const cm=Lf.circleMarker([i.a,i.o],{radius:baseR,fillColor:sv.color,color:'#FFF',weight:2.5,fillOpacity:.9}).bindPopup(`<b>${ic} ${i.ti}</b><br><span style="color:${sv.color};font-weight:700">${i.s.toUpperCase()}</span> · ${i.dt}<br>${i.d}<br><small>⚔️ ${i.ac} · 🏥 ${i.og}</small>${vdBtn('incident',i.id)}`);
     if(anim&&(i.s==='critical'||i.s==='high'))cm.on('add',()=>{const e=cm.getElement();if(e)e.classList.add('anim-pulse')});
     cm.addTo(g.incidents);
-    // Severity glow circle — bigger for critical
-    const glowR={critical:35000,high:20000,medium:12000,low:6000}[i.s]||12000;
-    Lf.circle([i.a,i.o],{radius:glowR,fillColor:sv.color,color:sv.color,weight:1,fillOpacity:.06,dashArray:'4 3'}).addTo(g.incidents)})
+    const glowR={critical:40000,high:25000,medium:15000,low:8000}[i.s]||15000;
+    Lf.circle([i.a,i.o],{radius:glowR,fillColor:sv.color,color:sv.color,weight:1,fillOpacity:.07,dashArray:'4 3'}).addTo(g.incidents)})
   // Dashed lines between nearby/related incidents (same region, <200km apart)
   const incs=ev.incidents||[];
   for(let a=0;a<incs.length;a++){for(let b=a+1;b<incs.length;b++){
@@ -46,7 +45,7 @@ export function renderEventToMap(Lf,ev,anim=true){
       Lf.polyline([[incs[a].a,incs[a].o],[incs[b].a,incs[b].o]],{color:col,weight:1.5,opacity:.35,dashArray:'6 4'}).addTo(g.incidents)
     }
   }}
-  ;(ev.bases||[]).forEach(b=>{Lf.marker([b.a,b.o],{icon:Lf.divIcon({className:'dl',html:`<span style='color:#2E86AB;font-size:16px'>🏕️</span>`,iconSize:[20,20]})}).bindPopup(`<b>🏕️ ${b.n}</b><br>${b.st}`).addTo(g.bases)})
+  ;(ev.bases||[]).forEach((b,bi)=>{Lf.marker([b.a,b.o],{icon:Lf.divIcon({className:'dl',html:`<span style='color:#2E86AB;font-size:16px'>🏕️</span>`,iconSize:[20,20]})}).bindPopup(`<b>🏕️ ${b.n}</b><br>${b.st} · ${b.c||''}${vdBtn('base','ba_'+bi)}`).addTo(g.bases)})
   ;(ev.drawings||[]).forEach(d=>{if(d.type==='circle')Lf.circle([d.a,d.o],{radius:d.r||50000,fillColor:d.color||'#C73E1D',color:d.color||'#C73E1D',weight:2,fillOpacity:.12,dashArray:'8 4'}).bindPopup(`<b>${d.label||'Zone'}</b>`).addTo(g.drawings)})
   return g
 }
