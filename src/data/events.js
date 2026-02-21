@@ -41,3 +41,72 @@ export function eventToReport(ev){const l=[];l.push(`# ${ev.name}\n**${ev.severi
 export function encodeShare(ev,pw=''){const p={n:ev.name,s:ev.severity,st:ev.status,b:ev.brief,tp:ev.type,bs:(ev.briefs||[]).filter(x=>!x.archived).map(x=>({t:x.text,d:x.ts})),r:ev.region,c:ev.corridor,rz:ev.riskZones,i:(ev.incidents||[]).map(x=>({id:x.id,dt:x.dt,a:x.a,o:x.o,tp:x.tp,s:x.s,ti:x.ti,d:x.d,ac:x.ac,og:x.og})),ad:ev.accessDenied,ba:ev.bases,dr:ev.drawings||[],nb:(ev.notebook||[]).slice(-10).map(x=>({a:x.author,t:x.text})),pw};return btoa(unescape(encodeURIComponent(JSON.stringify(p))))}
 export function decodeShare(enc){try{const p=JSON.parse(decodeURIComponent(escape(atob(enc))));return{event:createEvent({id:'sh_'+Date.now(),name:p.n||'Shared',type:p.tp||'corridor',severity:p.s||'medium',status:p.st||'shared',brief:p.b||'',briefs:(p.bs||[]).map((x,i)=>({id:'sb_'+i,text:x.t,ts:x.d,archived:false})),region:p.r||{center:[9.5,30.5],zoom:6,bounds:[[4.5,26],[16,34]]},corridor:p.c||[],riskZones:p.rz||[],incidents:(p.i||[]).map(x=>({...x})),accessDenied:p.ad||[],bases:p.ba||[],drawings:p.dr||[],notebook:(p.nb||[]).map((x,i)=>({id:'sn_'+i,author:x.a||'Shared',type:'note',text:x.t,ts:new Date().toISOString()}))}),pw:p.pw||''}}catch(e){console.error('Share decode error:',e);return null}}
 export function buildOverpassQuery(type,bounds){const[s,w,n,e]=[bounds.getSouth(),bounds.getWest(),bounds.getNorth(),bounds.getEast()];const bb=`${s},${w},${n},${e}`;return{hospitals:`[out:json][timeout:25];(node["amenity"="hospital"](${bb});way["amenity"="hospital"](${bb});node["amenity"="clinic"](${bb}););out center body 100;`,water:`[out:json][timeout:25];(node["amenity"="drinking_water"](${bb});node["man_made"="water_well"](${bb});node["natural"="spring"](${bb});node["man_made"="water_tower"](${bb}););out body 100;`,roads:`[out:json][timeout:25];way["highway"~"trunk|primary|secondary"](${bb});out geom 200;`}[type]||''}
+
+// Local geocoding fallback dictionary (offline/rate-limit safety net)
+const GEO_DICT={khartoum:[15.5,32.5],juba:[4.85,31.58],lankien:[8.28,31.60],pieri:[8.45,31.75],walgak:[8.60,32.20],bor:[6.2,31.56],malakal:[9.53,31.66],bentiu:[9.23,29.78],wau:[7.7,28.0],aweil:[8.77,27.39],rumbek:[6.8,29.7],kadugli:[11.0,29.7],abyei:[9.6,28.4],"el-obeid":[13.18,30.22],"el obeid":[13.18,30.22],nyirol:[8.5,31.6],uror:[8.1,32.0],akobo:[7.8,33.0],duk:[7.7,31.3],jonglei:[8.0,31.5],renk:[11.75,32.78],kodok:[9.68,32.12],fashoda:[9.88,32.05],torit:[4.41,32.58],yambio:[4.57,28.39],maridi:[4.92,29.48],nasir:[8.6,33.07],pochalla:[7.4,33.9],kapoeta:[4.77,33.59],nimule:[3.6,32.05],leer:[8.3,30.15],fangak:[8.9,31.65],sobat:[9.0,32.7],melut:[10.45,32.2],nasser:[8.6,33.07],mogadishu:[2.05,45.32],addis:[9.02,38.75],nairobi:[1.29,36.82],kampala:[0.35,32.58],asmara:[15.34,38.94],ndjamena:[12.13,15.05],cairo:[30.04,31.24],darfur:[13.5,25.0],"south kordofan":[11.5,29.5],kassala:[15.45,36.4],gedaref:[14.03,35.39],"port sudan":[19.62,37.22],atbara:[17.7,33.97],dongola:[19.17,30.48],"wad madani":[14.4,33.53],sennar:[13.55,33.62],"blue nile":[11.5,34.5],"white nile":[13.0,32.5],gezira:[14.5,33.5]}
+const INC_KW={bombardment:['airstrike','bomb','shell','attack','aerial','strike','mortar'],looting:['loot','burn','ransack','pillage','rob','steal','arson'],'access-denial':['evacuat','denied','block','restrict','ban','access denied','force out'],'control-change':['control','capture','seize','took over','declared','occupy'],health:['cholera','disease','outbreak','epidemic','malaria','measles','polio','health'],displacement:['displac','fled','refugee','idp','migrat','flee','camp'],flood:['flood','rain','inundat','water level','overflow'],earthquake:['earthquake','quake','seismic','tremor']}
+const SEV_KW={critical:['critical','mass','large-scale','catastroph','extreme','devastating','massacre'],high:['high','significant','serious','major','severe'],medium:['moderate','ongoing','reported'],low:['minor','small','limited','isolated']}
+
+// Nominatim geocoding cache (persists during session)
+const _geoCache={}
+async function geocode(placeName){
+  const key=placeName.toLowerCase().trim()
+  if(_geoCache[key])return _geoCache[key]
+  // Check local dict first
+  if(GEO_DICT[key]){_geoCache[key]=GEO_DICT[key];return GEO_DICT[key]}
+  // Try Nominatim (OSM free geocoding — whole world, village-level)
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(placeName)}&format=json&limit=1`,{headers:{'User-Agent':'CorridorPlanner/3.0'}})
+    const d=await r.json()
+    if(d&&d[0]){const coords=[+d[0].lat,+d[0].lon];_geoCache[key]=coords;return coords}
+  }catch(e){console.warn('Nominatim error:',e)}
+  return null
+}
+
+// Extract place name candidates from text using NLP-light heuristics
+function extractPlaces(text){
+  const places=new Set()
+  // Capitalized words (2+ chars) not at sentence start — likely proper nouns
+  const caps=text.match(/(?<=[.!?\n]\s*\w+\s+|,\s*|;\s*|in\s+|at\s+|near\s+|from\s+|to\s+|of\s+|around\s+)([A-Z][a-zA-Z\u00C0-\u024F'-]{2,}(?:\s+[A-Z][a-zA-Z\u00C0-\u024F'-]{2,}){0,3})/g)||[]
+  caps.forEach(c=>places.add(c))
+  // Also try known patterns: "in/at/near PLACE", "PLACE county/province/city/region/district"
+  const patterns=text.match(/(?:in|at|near|from|around|outside)\s+([A-Z][a-zA-Z\u00C0-\u024F' -]{2,30})/g)||[]
+  patterns.forEach(p=>places.add(p.replace(/^(?:in|at|near|from|around|outside)\s+/i,'')))
+  // Check GEO_DICT keys case-insensitively
+  const lw=text.toLowerCase()
+  for(const name of Object.keys(GEO_DICT)){if(lw.includes(name))places.add(name)}
+  return[...places].filter(p=>p.length>2&&!['The','This','That','They','Their','These','There','After','Before','During','While','Where','Which','About','Other','Under','Above','Between','Within','Through','Against','Across','Behind','Beyond','Since','Until','From','Into','With','Have','Been','Were','Could','Would','Should','Must','More','Most','Some','Many','Such','Each','Every','Also','Still','Only','Just','Very','Even','Much','Well'].includes(p))
+}
+
+export async function localParseBrief(text,onProgress){
+  const sentences=text.split(/[.;!\n]+/).filter(s=>s.trim().length>10)
+  const results=[]
+  const allPlaces=extractPlaces(text)
+  // Geocode all unique places (with 200ms delay between Nominatim calls for rate limit)
+  const resolved={}
+  let i=0
+  for(const place of allPlaces){
+    const coords=await geocode(place)
+    if(coords)resolved[place.toLowerCase()]=coords
+    i++
+    if(onProgress)onProgress(Math.round(i/allPlaces.length*100))
+    // Nominatim rate limit: 1 req/sec — only delay if we actually hit the API
+    if(!GEO_DICT[place.toLowerCase()]&&!_geoCache[place.toLowerCase()])await new Promise(r=>setTimeout(r,250))
+  }
+  sentences.forEach(sent=>{
+    const sl=sent.toLowerCase().trim()
+    let loc=null,locName=''
+    // Match against resolved places
+    for(const[name,coords]of Object.entries(resolved)){if(sl.includes(name)){loc=coords;locName=name;break}}
+    if(!loc)return
+    let tp='displacement'
+    for(const[type,kws]of Object.entries(INC_KW)){if(kws.some(k=>sl.includes(k))){tp=type;break}}
+    let sv='medium'
+    for(const[level,kws]of Object.entries(SEV_KW)){if(kws.some(k=>sl.includes(k))){sv=level;break}}
+    const dateM=sl.match(/\d{4}-\d{2}-\d{2}/)
+    const title=locName.charAt(0).toUpperCase()+locName.slice(1)+' — '+(ICON_MAP[tp]||'')+(tp.charAt(0).toUpperCase()+tp.slice(1))
+    if(!results.find(r=>Math.abs(r.a-loc[0])<0.01&&Math.abs(r.o-loc[1])<0.01&&r.tp===tp))
+      results.push({id:'lp_'+Date.now()+'_'+results.length,dt:dateM?dateM[0]:new Date().toISOString().slice(0,10),a:loc[0],o:loc[1],tp,s:sv,ti:title,d:sent.trim().slice(0,150),ac:'Unknown',og:'Parsed ('+allPlaces.length+' locations)'})
+  })
+  return results
+}
