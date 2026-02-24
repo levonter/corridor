@@ -37,6 +37,8 @@ html,body,#root{height:100%;overflow:hidden;font-family:'Source Serif 4',Georgia
 [data-theme="dark"] .leaflet-control-zoom a{background:var(--bg-secondary)!important;color:var(--text-secondary)!important;border-color:var(--border-primary)!important}
 [data-theme="dark"] .leaflet-control-attribution{background:rgba(8,12,22,.8)!important;color:var(--text-faint)!important;font-size:9px!important}
 [data-theme="dark"] .leaflet-control-attribution a{color:var(--text-muted)!important}
+[data-theme="dark"] .leaflet-container{background:#0A0E1A!important}
+[data-theme="dark"] .leaflet-tile-pane{filter:brightness(0.9) saturate(0.8)}
 
 @media(max-width:860px){.app-layout{flex-direction:column}.panel{width:100%!important;min-width:unset!important;max-height:50vh;border-right:none;border-bottom:1px solid var(--border-primary)}.panel.collapsed{max-height:0}.canvas{min-height:50vh}}
 @media print{.panel,.sidebar-toggle,button:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out){display:none!important}.canvas{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important}.app-layout{display:block!important}[style*="position: absolute"]{display:none!important}}

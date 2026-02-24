@@ -60,22 +60,64 @@ export function decodeShare(enc){try{const p=JSON.parse(decodeURIComponent(escap
 export function buildOverpassQuery(type,bounds){const[s,w,n,e]=[bounds.getSouth(),bounds.getWest(),bounds.getNorth(),bounds.getEast()];const bb=`${s},${w},${n},${e}`;return{hospitals:`[out:json][timeout:25];(node["amenity"="hospital"](${bb});way["amenity"="hospital"](${bb});node["amenity"="clinic"](${bb}););out center body 100;`,water:`[out:json][timeout:25];(node["amenity"="drinking_water"](${bb});node["man_made"="water_well"](${bb});node["natural"="spring"](${bb});node["man_made"="water_tower"](${bb}););out body 100;`,roads:`[out:json][timeout:25];way["highway"~"trunk|primary|secondary"](${bb});out geom 200;`}[type]||''}
 
 // Local geocoding fallback dictionary (offline/rate-limit safety net)
-const GEO_DICT={khartoum:[15.5,32.5],juba:[4.85,31.58],lankien:[8.28,31.60],pieri:[8.45,31.75],walgak:[8.60,32.20],bor:[6.2,31.56],malakal:[9.53,31.66],bentiu:[9.23,29.78],wau:[7.7,28.0],aweil:[8.77,27.39],rumbek:[6.8,29.7],kadugli:[11.0,29.7],abyei:[9.6,28.4],"el-obeid":[13.18,30.22],"el obeid":[13.18,30.22],nyirol:[8.5,31.6],uror:[8.1,32.0],akobo:[7.8,33.0],duk:[7.7,31.3],jonglei:[8.0,31.5],renk:[11.75,32.78],kodok:[9.68,32.12],fashoda:[9.88,32.05],torit:[4.41,32.58],yambio:[4.57,28.39],maridi:[4.92,29.48],nasir:[8.6,33.07],pochalla:[7.4,33.9],kapoeta:[4.77,33.59],nimule:[3.6,32.05],leer:[8.3,30.15],fangak:[8.9,31.65],sobat:[9.0,32.7],melut:[10.45,32.2],nasser:[8.6,33.07],mogadishu:[2.05,45.32],addis:[9.02,38.75],nairobi:[1.29,36.82],kampala:[0.35,32.58],asmara:[15.34,38.94],ndjamena:[12.13,15.05],cairo:[30.04,31.24],darfur:[13.5,25.0],"south kordofan":[11.5,29.5],kassala:[15.45,36.4],gedaref:[14.03,35.39],"port sudan":[19.62,37.22],atbara:[17.7,33.97],dongola:[19.17,30.48],"wad madani":[14.4,33.53],sennar:[13.55,33.62],"blue nile":[11.5,34.5],"white nile":[13.0,32.5],gezira:[14.5,33.5]}
+const GEO_DICT={khartoum:[15.5,32.5],juba:[4.85,31.58],lankien:[8.28,31.60],pieri:[8.45,31.75],walgak:[8.60,32.20],bor:[6.2,31.56],malakal:[9.53,31.66],bentiu:[9.23,29.78],wau:[7.7,28.0],aweil:[8.77,27.39],rumbek:[6.8,29.7],kadugli:[11.0,29.7],abyei:[9.6,28.4],"el-obeid":[13.18,30.22],"el obeid":[13.18,30.22],nyirol:[8.5,31.6],uror:[8.1,32.0],akobo:[7.8,33.0],duk:[7.7,31.3],jonglei:[8.0,31.5],renk:[11.75,32.78],kodok:[9.68,32.12],fashoda:[9.88,32.05],torit:[4.41,32.58],yambio:[4.57,28.39],maridi:[4.92,29.48],nasir:[8.6,33.07],pochalla:[7.4,33.9],kapoeta:[4.77,33.59],nimule:[3.6,32.05],leer:[8.3,30.15],fangak:[8.9,31.65],sobat:[9.0,32.7],melut:[10.45,32.2],nasser:[8.6,33.07],mogadishu:[2.05,45.32],addis:[9.02,38.75],"addis ababa":[9.02,38.75],nairobi:[-1.29,36.82],kampala:[0.35,32.58],asmara:[15.34,38.94],ndjamena:[12.13,15.05],cairo:[30.04,31.24],darfur:[13.5,25.0],"south kordofan":[11.5,29.5],kassala:[15.45,36.4],gedaref:[14.03,35.39],"port sudan":[19.62,37.22],atbara:[17.7,33.97],dongola:[19.17,30.48],"wad madani":[14.4,33.53],sennar:[13.55,33.62],"blue nile":[11.5,34.5],"white nile":[13.0,32.5],gezira:[14.5,33.5],omdurman:[15.65,32.48],"north darfur":[15.5,25.5],"south darfur":[11.75,24.9],"west darfur":[13.0,22.4],"central darfur":[14.0,24.0],"east darfur":[12.0,26.0],nyala:[12.05,24.88],"el fasher":[13.63,25.35],geneina:[13.45,22.45],zalingei:[12.91,23.47],kutum:[14.2,24.67],kebkabiya:[13.33,24.33],tawila:[13.43,24.72],dilling:[12.06,29.65],talodi:[10.63,30.38],muglad:[11.04,28.08],babanusa:[11.33,27.82],agok:[9.55,28.55],turalei:[8.83,27.95],kuajok:[8.57,27.90],tonj:[7.27,28.68],yirol:[6.55,30.50],mundri:[5.18,30.05],yei:[4.09,30.68],morobo:[3.73,31.73],magwi:[3.95,32.30],lafon:[4.20,32.58],pibor:[6.80,33.13],twic:[8.45,30.85],warrap:[8.0,28.5],gogrial:[8.53,28.12],mayom:[9.35,29.69],"upper nile":[10.0,32.0],unity:[9.0,29.5],"western bahr el ghazal":[8.5,25.5],"western equatoria":[5.0,28.5],"central equatoria":[4.5,31.5],"eastern equatoria":[4.5,33.0],"lakes state":[6.5,30.0],
+// Syria
+aleppo:[36.20,37.16],damascus:[33.51,36.29],idlib:[35.93,36.63],homs:[34.73,36.72],raqqa:[35.95,39.01],deir:[35.34,40.14],latakia:[35.52,35.79],hama:[35.14,36.75],daraa:[32.63,36.10],qamishli:[37.05,41.22],
+// Yemen
+sanaa:[15.35,44.21],aden:[12.79,45.02],taiz:[13.58,44.02],hodeidah:[14.80,42.95],marib:[15.46,45.32],
+// DRC
+goma:[-1.68,29.23],bukavu:[-2.51,28.86],kinshasa:[-4.32,15.31],bunia:[1.57,30.24],ituri:[1.5,30.0],beni:[0.49,29.47],
+// Myanmar
+yangon:[16.87,96.20],mandalay:[21.97,96.08],rakhine:[20.15,92.90],sittwe:[20.15,92.90],
+// Ukraine
+kyiv:[50.45,30.52],kharkiv:[49.99,36.23],odesa:[46.47,30.73],kherson:[46.64,32.62],zaporizhzhia:[47.84,35.14],mariupol:[47.10,37.54],donetsk:[48.00,37.80],luhansk:[48.57,39.33],
+// Afghanistan
+kabul:[34.53,69.17],kandahar:[31.63,65.71],herat:[34.34,62.20],mazar:[36.71,67.11],
+// Ethiopia
+"dire dawa":[9.60,41.85],mekelle:[13.50,39.47],tigray:[13.5,39.5],amhara:[11.5,38.5],afar:[11.5,41.5],
+// Somalia
+hargeisa:[9.56,44.06],kismayo:[-0.35,42.54],baidoa:[3.12,43.65],beledweyne:[4.74,45.20],
+// Niger
+niamey:[13.51,2.11],diffa:[13.32,12.61],dosso:[13.05,3.19],agadez:[16.97,7.99],tahoua:[14.89,5.26],zinder:[13.80,8.99],maradi:[13.50,7.10],tillaberi:[13.52,1.45],
+// Nigeria
+abuja:[9.06,7.49],maiduguri:[11.85,13.16],lagos:[6.52,3.38],kano:[12.00,8.52],
+// Mali
+bamako:[12.64,-8.00],gao:[16.27,-0.04],timbuktu:[16.77,-3.01],mopti:[14.50,-4.20],kidal:[18.44,1.41],
+// Burkina Faso
+ouagadougou:[12.37,-1.52],djibo:[14.10,-1.63],kaya:[13.09,-1.08],dori:[14.04,-0.03]}
+
 const INC_KW={bombardment:['airstrike','bomb','shell','attack','aerial','strike','mortar'],looting:['loot','burn','ransack','pillage','rob','steal','arson'],'access-denial':['evacuat','denied','block','restrict','ban','access denied','force out'],'control-change':['control','capture','seize','took over','declared','occupy'],health:['cholera','disease','outbreak','epidemic','malaria','measles','polio','health'],displacement:['displac','fled','refugee','idp','migrat','flee','camp'],flood:['flood','rain','inundat','water level','overflow'],earthquake:['earthquake','quake','seismic','tremor']}
 const SEV_KW={critical:['critical','mass','large-scale','catastroph','extreme','devastating','massacre'],high:['high','significant','serious','major','severe'],medium:['moderate','ongoing','reported'],low:['minor','small','limited','isolated']}
 
 // Nominatim geocoding cache (persists during session)
 const _geoCache={}
+let _geoBias=null // {viewbox:'lon1,lat1,lon2,lat2'} — set from active event region
+export function setGeoBias(region){
+  if(region?.bounds){
+    const[[s,w],[n,e]]=region.bounds
+    _geoBias={viewbox:`${w},${n},${e},${s}`,bounded:0} // prefer but don't restrict
+  }else _geoBias=null
+}
 async function geocode(placeName){
   const key=placeName.toLowerCase().trim()
   if(_geoCache[key])return _geoCache[key]
-  // Check local dict first
+  // Check local dict first — ALWAYS prefer this (hand-verified coordinates)
   if(GEO_DICT[key]){_geoCache[key]=GEO_DICT[key];return GEO_DICT[key]}
-  // Try Nominatim (OSM free geocoding — whole world, village-level)
+  // If no region bias set, ONLY use local dict — don't send random words to Nominatim
+  if(!_geoBias)return null
+  // Try Nominatim with region bias
   try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(placeName)}&format=json&limit=1`,{headers:{'User-Agent':'CorridorPlanner/3.0'}})
+    const[vw,vn,ve,vs]=_geoBias.viewbox.split(',').map(Number)
+    let url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(placeName)}&format=json&limit=3&viewbox=${_geoBias.viewbox}&bounded=0`
+    const r=await fetch(url,{headers:{'User-Agent':'CorridorPlanner/3.0'}})
     const d=await r.json()
-    if(d&&d[0]){const coords=[+d[0].lat,+d[0].lon];_geoCache[key]=coords;return coords}
+    if(d&&d.length){
+      // STRICT: only accept results within region bounds ±5 degrees
+      const inRegion=d.find(r=>{const lat=+r.lat,lon=+r.lon;return lat>=vs-5&&lat<=vn+5&&lon>=vw-5&&lon<=ve+5})
+      if(inRegion){const coords=[+inRegion.lat,+inRegion.lon];_geoCache[key]=coords;return coords}
+      // If nothing in region, REJECT — the word is probably not a place name
+      return null
+    }
   }catch(e){console.warn('Nominatim error:',e)}
   return null
 }
@@ -83,16 +125,39 @@ async function geocode(placeName){
 // Extract place name candidates from text using NLP-light heuristics
 function extractPlaces(text){
   const places=new Set()
-  // Capitalized words (2+ chars) not at sentence start — likely proper nouns
-  const caps=text.match(/(?<=[.!?\n]\s*\w+\s+|,\s*|;\s*|in\s+|at\s+|near\s+|from\s+|to\s+|of\s+|around\s+)([A-Z][a-zA-Z\u00C0-\u024F'-]{2,}(?:\s+[A-Z][a-zA-Z\u00C0-\u024F'-]{2,}){0,3})/g)||[]
-  caps.forEach(c=>places.add(c))
-  // Also try known patterns: "in/at/near PLACE", "PLACE county/province/city/region/district"
-  const patterns=text.match(/(?:in|at|near|from|around|outside)\s+([A-Z][a-zA-Z\u00C0-\u024F' -]{2,30})/g)||[]
-  patterns.forEach(p=>places.add(p.replace(/^(?:in|at|near|from|around|outside)\s+/i,'')))
-  // Check GEO_DICT keys case-insensitively
+  const stopWords=new Set(['The','This','That','They','Their','These','There','After','Before','During','While','Where','Which','About','Other','Under','Above','Between','Within','Through','Against','Across','Behind','Beyond','Since','Until','From','Into','With','Have','Been','Were','Could','Would','Should','Must','More','Most','Some','Many','Such','Each','Every','Also','Still','Only','Just','Very','Even','Much','Well','Said','According','However','Although','Because','Report','Reports','Reported','Updated','January','February','March','April','May','June','July','August','September','October','November','December','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday',
+  // Organizations
+  'SSPDF','SPLA','UNHCR','UNICEF','OCHA','MSF','ICRC','WHO','IOM','WFP','NGO','NGOs','OCA','OCB','OCP','UNDP','UNFPA','FAO','UNMAS','UNMISS','AMISOM','NATO','ECOWAS','IGAD',
+  'Save','United','Nations','International','Red','Cross','World','Health','Organization',
+  // Geographic classifiers (not places themselves)
+  'County','Province','State','Region','District','Zone','Area','Sector','Town','City','Village','Camp','Site','Center','Centre',
+  // Common English words that look like places when capitalized
+  'Armed','Arms','Attack','Attacks','Aid','Access','Along','Away','Axis','Both','Civilian','Civilians','Closed','Communities','Convoys','Complete','Cancelled','Capacity','Chain','Concerns','Constraints','Coordination','Damage','Damaged','Delayed','Devices','Displacement','Displaced','Disruption','Disruptions','Distribution','Distributions','Due','Early','Effectively','Emerged','Escort','Explosions','Families','Fired','Fled','Flows','Food','Forced','Fuel','Groups','Humanitarian','IED','Improvised','Incident','Incidents','Increased','Informal','Infrastructure','Insecurity','Intermittently','Key','Large','Led','Limiting','Localities','Main','Market','Military','Movement','Multiple','Overview','Panic','Parts','Planned','Population','Populations','Prices','Protection','Public','Recruitment','Reduced','Rendering','Requirements','Restrictions','Roads','Roadside','Route','Routes','Sabotaged','Safety','Sections','Security','Separation','Several','Sharply','Southern','Spontaneous','Supply','Suspension','Systems','Targeting','Targeted','Towers','Transport','Travel','Traveling','Triggered','Unsafe','Urban','Vehicles','Warning',
+  // More generic words
+  'New','General','Central','North','South','East','West','Northern','Southern','Eastern','Western','Upper','Lower','Major','Minor','Critical','High','Low','Medium','Active','Ongoing','Recent','Former','Current','Local','National','Regional','Total','Full','Partial','Initial','Final','Primary','Secondary'])
+  // All capitalized words 3+ chars
+  const allCaps=text.match(/\b[A-Z][a-zA-Z\u00C0-\u024F'-]{2,}\b/g)||[]
+  allCaps.forEach(c=>{if(!stopWords.has(c))places.add(c)})
+  // Multi-word place names (2-4 words starting with caps)
+  const multi=text.match(/\b[A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+){1,3}\b/g)||[]
+  multi.forEach(m=>{if(!stopWords.has(m.split(/\s/)[0]))places.add(m)})
+  // Pattern: "in/at/near/from/to PLACE"
+  const patterns=text.match(/(?:in|at|near|from|around|outside|to|towards)\s+([A-Z][a-zA-Z\u00C0-\u024F' -]{2,30})/g)||[]
+  patterns.forEach(p=>places.add(p.replace(/^(?:in|at|near|from|around|outside|to|towards)\s+/i,'')))
+  // Check GEO_DICT keys case-insensitively — THIS IS CRITICAL
   const lw=text.toLowerCase()
   for(const name of Object.keys(GEO_DICT)){if(lw.includes(name))places.add(name)}
-  return[...places].filter(p=>p.length>2&&!['The','This','That','They','Their','These','There','After','Before','During','While','Where','Which','About','Other','Under','Above','Between','Within','Through','Against','Across','Behind','Beyond','Since','Until','From','Into','With','Have','Been','Were','Could','Would','Should','Must','More','Most','Some','Many','Such','Each','Every','Also','Still','Only','Just','Very','Even','Much','Well'].includes(p))
+  // Filter: remove stop words (case-insensitive), all-caps words (acronyms), and short words
+  const swLower=new Set([...stopWords].map(w=>w.toLowerCase()))
+  return[...places].filter(p=>{
+    if(p.length<3)return false
+    if(swLower.has(p.toLowerCase()))return false
+    // Reject all-uppercase words (acronyms like IED, NGO, SSPDF)
+    if(p===p.toUpperCase()&&p.length<8)return false
+    // Reject words that are purely generic English (lowercase check)
+    if(swLower.has(p.charAt(0).toUpperCase()+p.slice(1).toLowerCase()))return false
+    return true
+  })
 }
 
 export async function localParseBrief(text,onProgress){
