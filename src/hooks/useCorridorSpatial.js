@@ -16,22 +16,14 @@ let turf = null
 
 export async function loadTurf() {
   if (turf) return turf
-  
-  // Try npm import first
-  try {
-    turf = await import('@turf/turf')
-    return turf
-  } catch {
-    // CDN fallback — works without npm install
-    return new Promise((resolve, reject) => {
-      if (window.turf) { turf = window.turf; resolve(turf); return }
-      const s = document.createElement('script')
-      s.src = 'https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js'
-      s.onload = () => { turf = window.turf; resolve(turf) }
-      s.onerror = () => reject(new Error('Failed to load Turf.js'))
-      document.head.appendChild(s)
-    })
-  }
+  if (window.turf) { turf = window.turf; return turf }
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script')
+    s.src = 'https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js'
+    s.onload = () => { turf = window.turf; resolve(turf) }
+    s.onerror = () => reject(new Error('Failed to load Turf.js'))
+    document.head.appendChild(s)
+  })
 }
 
 // ═══════════════════════════════════════════════
