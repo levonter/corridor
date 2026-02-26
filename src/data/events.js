@@ -15,6 +15,61 @@ export function computeTypeCounts(ev){const c={};(ev?.incidents||[]).forEach(i=>
 export function buildSystemPrompt(ev){if(!ev)return'You are a Humanitarian Corridor AI.';const inc=(ev.incidents||[]).map(i=>`${i.ti}(${i.dt},${i.s})`).join(', ');const briefs=(ev.briefs||[]).filter(b=>!b.archived).map(b=>b.text).join(' | ');return`You are a Humanitarian Corridor AI for "${ev.name}". Be concise, operational.\nBRIEFS: ${briefs||ev.brief||'None'}\nINCIDENTS: ${inc||'None'}\nACCESS DENIED: ${(ev.accessDenied||[]).map(z=>z.n).join(', ')||'None'}\nSEVERITY: ${ev.severity}\nProvide geographic coordinates when relevant. Format locations as [lat, lon].`}
 export const BRIEF_ANALYSIS_PROMPT=`Analyze this humanitarian brief. Extract ALL incidents with geographic coordinates. Return ONLY valid JSON array. Each item: {"ti":"title","d":"description","a":lat_number,"o":lng_number,"s":"critical|high|medium|low","tp":"bombardment|looting|access-denial|control-change|health|displacement|flood|earthquake","dt":"YYYY-MM-DD","ac":"actor","og":"organization"}. MUST have numeric a and o fields. Estimate coordinates from place names if not explicit. Brief:`
 
+// V4 Prompt: Human-in-the-Loop with uncertainty flags
+export function buildAnalysisPromptV4(operation, briefText) {
+  const region = operation?.region || operation?.regionBounds
+  let centerLat = '0', centerLng = '0', southLat = '-90', westLng = '-180', northLat = '90', eastLng = '180', areaName = operation?.name || 'Unknown'
+  
+  if (region?.bounds) {
+    const [[s, w], [n, e]] = region.bounds
+    centerLat = ((s + n) / 2).toFixed(2)
+    centerLng = ((w + e) / 2).toFixed(2)
+    southLat = s.toFixed(2); westLng = w.toFixed(2)
+    northLat = n.toFixed(2); eastLng = e.toFixed(2)
+  } else if (region?.center) {
+    centerLat = region.center[0]?.toFixed?.(2) || '0'
+    centerLng = region.center[1]?.toFixed?.(2) || '0'
+  }
+  
+  return `You are a Humanitarian Crisis GIS Analyst.
+
+TASK: Parse the following humanitarian brief and extract ALL discrete incidents, access constraints, and geographic events. Return structured JSON.
+
+RULES:
+1. Each item MUST have a real-world geographic location.
+2. If you know the EXACT coordinates, set "uncertainty": false.
+3. If the location is VAGUE (e.g. "southern region", "along the route", "several localities"), set "uncertainty": true AND fill "uncertainty_note" explaining why.
+4. NEVER invent coordinates. If you cannot determine even an approximate location, set lat and lng to null and "uncertainty": true.
+5. Use the CONTEXT REGION below to bias your coordinate estimates toward this area.
+6. Return ONLY the JSON array — no markdown, no explanation, no backticks.
+
+CONTEXT REGION:
+Center: ${centerLat}, ${centerLng}
+Bounds: [${southLat}, ${westLng}] to [${northLat}, ${eastLng}]
+Country/Area: ${areaName}
+
+OUTPUT SCHEMA (JSON array):
+[
+  {
+    "title": "Short descriptive title",
+    "description": "1-2 sentence summary",
+    "type": "BOMBARDMENT|LOOTING|ACCESS_DENIAL|CONTROL_CHANGE|HEALTH|DISPLACEMENT|FLOOD|EARTHQUAKE",
+    "severity": "CRITICAL|HIGH|MEDIUM|LOW",
+    "date": "YYYY-MM-DD or null",
+    "lat": 12.345 or null,
+    "lng": 34.567 or null,
+    "location_name": "Place name as written in text",
+    "actor": "Who caused it or null",
+    "organization": "Who reported or null",
+    "uncertainty": true or false,
+    "uncertainty_note": "Why location is uncertain, or null"
+  }
+]
+
+BRIEF TEXT:
+` + briefText
+}
+
 export function renderEventToMap(Lf,ev,anim=true,onViewDetail){
   const g={corridor:Lf.layerGroup(),risks:Lf.layerGroup(),access:Lf.layerGroup(),incidents:Lf.layerGroup(),bases:Lf.layerGroup(),drawings:Lf.layerGroup()}
   const vdBtn=(type,id)=>onViewDetail?`<br><button onclick="window.__cpViewDetail('${type}','${id}')" style="margin-top:6px;padding:4px 12px;border-radius:5px;border:1px solid #C9A84C;background:transparent;color:#C9A84C;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;width:100%">View Details →</button>`:''
@@ -84,7 +139,9 @@ abuja:[9.06,7.49],maiduguri:[11.85,13.16],lagos:[6.52,3.38],kano:[12.00,8.52],
 // Mali
 bamako:[12.64,-8.00],gao:[16.27,-0.04],timbuktu:[16.77,-3.01],mopti:[14.50,-4.20],kidal:[18.44,1.41],
 // Burkina Faso
-ouagadougou:[12.37,-1.52],djibo:[14.10,-1.63],kaya:[13.09,-1.08],dori:[14.04,-0.03]}
+ouagadougou:[12.37,-1.52],djibo:[14.10,-1.63],kaya:[13.09,-1.08],dori:[14.04,-0.03],
+// Türkiye
+istanbul:[41.01,28.98],ankara:[39.93,32.86],izmir:[38.42,27.13],antalya:[36.90,30.70],siirt:[37.93,42.01],diyarbakir:[37.92,40.23],batman:[37.88,41.13],bitlis:[38.40,42.11],van:[38.49,43.38],hakkari:[37.58,43.74],sirnak:[37.52,42.46],mardin:[37.31,40.73],gaziantep:[37.07,37.38],sanliurfa:[37.16,38.79],adiyaman:[37.76,38.28],malatya:[38.35,38.31],elazig:[38.68,39.22],bingol:[38.88,40.50],mus:[38.73,41.49],tunceli:[39.11,39.55],erzurum:[39.90,41.27],trabzon:[41.00,39.72],kayseri:[38.73,35.49],konya:[37.87,32.48],adana:[37.00,35.32],mersin:[36.80,34.63],hatay:[36.40,36.35],kahramanmaras:[37.58,36.93],osmaniye:[37.07,36.25]}
 
 const INC_KW={bombardment:['airstrike','bomb','shell','attack','aerial','strike','mortar'],looting:['loot','burn','ransack','pillage','rob','steal','arson'],'access-denial':['evacuat','denied','block','restrict','ban','access denied','force out'],'control-change':['control','capture','seize','took over','declared','occupy'],health:['cholera','disease','outbreak','epidemic','malaria','measles','polio','health'],displacement:['displac','fled','refugee','idp','migrat','flee','camp'],flood:['flood','rain','inundat','water level','overflow'],earthquake:['earthquake','quake','seismic','tremor']}
 const SEV_KW={critical:['critical','mass','large-scale','catastroph','extreme','devastating','massacre'],high:['high','significant','serious','major','severe'],medium:['moderate','ongoing','reported'],low:['minor','small','limited','isolated']}
@@ -122,42 +179,36 @@ async function geocode(placeName){
   return null
 }
 
-// Extract place name candidates from text using NLP-light heuristics
+// Extract place name candidates from text — CONSERVATIVE approach
+// Only returns: (1) GEO_DICT matches with context (2) Words after location prepositions
 function extractPlaces(text){
   const places=new Set()
-  const stopWords=new Set(['The','This','That','They','Their','These','There','After','Before','During','While','Where','Which','About','Other','Under','Above','Between','Within','Through','Against','Across','Behind','Beyond','Since','Until','From','Into','With','Have','Been','Were','Could','Would','Should','Must','More','Most','Some','Many','Such','Each','Every','Also','Still','Only','Just','Very','Even','Much','Well','Said','According','However','Although','Because','Report','Reports','Reported','Updated','January','February','March','April','May','June','July','August','September','October','November','December','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday',
-  // Organizations
-  'SSPDF','SPLA','UNHCR','UNICEF','OCHA','MSF','ICRC','WHO','IOM','WFP','NGO','NGOs','OCA','OCB','OCP','UNDP','UNFPA','FAO','UNMAS','UNMISS','AMISOM','NATO','ECOWAS','IGAD',
-  'Save','United','Nations','International','Red','Cross','World','Health','Organization',
-  // Geographic classifiers (not places themselves)
-  'County','Province','State','Region','District','Zone','Area','Sector','Town','City','Village','Camp','Site','Center','Centre',
-  // Common English words that look like places when capitalized
-  'Armed','Arms','Attack','Attacks','Aid','Access','Along','Away','Axis','Both','Civilian','Civilians','Closed','Communities','Convoys','Complete','Cancelled','Capacity','Chain','Concerns','Constraints','Coordination','Damage','Damaged','Delayed','Devices','Displacement','Displaced','Disruption','Disruptions','Distribution','Distributions','Due','Early','Effectively','Emerged','Escort','Explosions','Families','Fired','Fled','Flows','Food','Forced','Fuel','Groups','Humanitarian','IED','Improvised','Incident','Incidents','Increased','Informal','Infrastructure','Insecurity','Intermittently','Key','Large','Led','Limiting','Localities','Main','Market','Military','Movement','Multiple','Overview','Panic','Parts','Planned','Population','Populations','Prices','Protection','Public','Recruitment','Reduced','Rendering','Requirements','Restrictions','Roads','Roadside','Route','Routes','Sabotaged','Safety','Sections','Security','Separation','Several','Sharply','Southern','Spontaneous','Supply','Suspension','Systems','Targeting','Targeted','Towers','Transport','Travel','Traveling','Triggered','Unsafe','Urban','Vehicles','Warning',
-  // More generic words
-  'New','General','Central','North','South','East','West','Northern','Southern','Eastern','Western','Upper','Lower','Major','Minor','Critical','High','Low','Medium','Active','Ongoing','Recent','Former','Current','Local','National','Regional','Total','Full','Partial','Initial','Final','Primary','Secondary'])
-  // All capitalized words 3+ chars
-  const allCaps=text.match(/\b[A-Z][a-zA-Z\u00C0-\u024F'-]{2,}\b/g)||[]
-  allCaps.forEach(c=>{if(!stopWords.has(c))places.add(c)})
-  // Multi-word place names (2-4 words starting with caps)
-  const multi=text.match(/\b[A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+){1,3}\b/g)||[]
-  multi.forEach(m=>{if(!stopWords.has(m.split(/\s/)[0]))places.add(m)})
-  // Pattern: "in/at/near/from/to PLACE"
-  const patterns=text.match(/(?:in|at|near|from|around|outside|to|towards)\s+([A-Z][a-zA-Z\u00C0-\u024F' -]{2,30})/g)||[]
-  patterns.forEach(p=>places.add(p.replace(/^(?:in|at|near|from|around|outside|to|towards)\s+/i,'')))
-  // Check GEO_DICT keys case-insensitively — THIS IS CRITICAL
-  const lw=text.toLowerCase()
-  for(const name of Object.keys(GEO_DICT)){if(lw.includes(name))places.add(name)}
-  // Filter: remove stop words (case-insensitive), all-caps words (acronyms), and short words
+  const stopWords=new Set(['Province','State','Region','District','Zone','Area','Sector','Town','City','Village','Camp','Site','Center','Centre',
+  'Emergency','Response','Limited','Areas','Affected','Open','Ongoing','Status','Severe','Critical',
+  'New','General','Central','North','South','East','West','Northern','Southern','Eastern','Western','Upper','Lower','Major','Minor','High','Low','Medium','Active','Recent','Former','Current','Local','National','Regional','Primary','Secondary'])
   const swLower=new Set([...stopWords].map(w=>w.toLowerCase()))
-  return[...places].filter(p=>{
-    if(p.length<3)return false
-    if(swLower.has(p.toLowerCase()))return false
-    // Reject all-uppercase words (acronyms like IED, NGO, SSPDF)
-    if(p===p.toUpperCase()&&p.length<8)return false
-    // Reject words that are purely generic English (lowercase check)
-    if(swLower.has(p.charAt(0).toUpperCase()+p.slice(1).toLowerCase()))return false
-    return true
+  // Common English words that happen to be in GEO_DICT — require stricter context
+  const ambiguous=new Set(['unity','leer','bor','gore','duk','wau','renk','maridi'])
+  
+  // (1) GEO_DICT — word-boundary match + context check for ambiguous words
+  for(const name of Object.keys(GEO_DICT)){
+    const re=new RegExp('\\b'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i')
+    if(!re.test(text))continue
+    if(ambiguous.has(name)){
+      // Require location preposition nearby: "in Bor", "near Wau", "at Duk", "from Leer"
+      const ctxRe=new RegExp('(?:in|at|near|from|to|around|towards|outside|struck|across)\\s+'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i')
+      if(!ctxRe.test(text))continue
+    }
+    places.add(name)
+  }
+  // (2) Preposition patterns: "in/at/near/from/to/struck/across PLACE_NAME"
+  const patterns=text.match(/(?:in|at|near|from|around|outside|to|towards|struck|across|linking|between)\s+([A-Z][a-zA-Z\u00C0-\u024F' -]{2,30})/g)||[]
+  patterns.forEach(p=>{
+    const place=p.replace(/^(?:in|at|near|from|around|outside|to|towards|struck|across|linking|between)\s+/i,'').trim()
+    const clean=place.replace(/\s+(Province|City|State|Region|District|County|Center|Centre|area|zone|city center.*)$/i,'').trim()
+    if(clean.length>2&&!swLower.has(clean.toLowerCase()))places.add(clean)
   })
+  return[...places]
 }
 
 export async function localParseBrief(text,onProgress){
