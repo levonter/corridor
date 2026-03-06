@@ -85,14 +85,26 @@ export function renderEventToMap(Lf,ev,anim=true,onViewDetail){
   ;(ev.accessDenied||[]).forEach(z=>{Lf.circle([z.a,z.o],{radius:z.r,fillColor:'#E8553A',color:'#E8553A',weight:2.5,fillOpacity:.15,dashArray:'10 5'}).addTo(g.access);Lf.marker([z.a,z.o],{icon:Lf.divIcon({className:'dl',html:`<span style="color:#E8553A;font-size:13px;font-weight:800;text-shadow:0 0 8px rgba(232,85,58,.6)">🚫 ${z.n}</span>`,iconSize:[140,25]})}).addTo(g.access)})
   ;(ev.incidents||[]).forEach((i,idx)=>{const sv=SEVERITY[i.s]||SEVERITY.medium,ic=ICON_MAP[i.tp]||'⚠️';
     const baseR={critical:14,high:10,medium:8,low:6}[i.s]||8;
-    const cm=Lf.circleMarker([i.a,i.o],{radius:baseR,fillColor:sv.color,color:sv.color,weight:3,fillOpacity:.95}).bindPopup(`<b>${ic} ${i.ti}</b><br><span style="color:${sv.color};font-weight:700">${i.s.toUpperCase()}</span> · ${i.dt}<br>${i.d}<br><small>⚔️ ${i.ac} · 🏥 ${i.og}</small>${vdBtn('incident',i.id)}`);
-    if(anim&&(i.s==='critical'||i.s==='high'))cm.on('add',()=>{const e=cm.getElement();if(e)e.classList.add('anim-pulse')});
+    const isGhost=!!i._uncertainty; // V4 HITL: AI uncertain locations → ghost node
+    const ghostNote=i._uncertaintyNote?`<br><em style="color:#E89B2A;font-size:10px">⚠️ ${i._uncertaintyNote}</em>`:''
+    const isDraft=!!i._isDraft; // V4 HITL: draft state → dashed border
+    const draftLabel=isDraft?'<br><span style="color:#C9A84C;font-size:10px;font-weight:700">📋 DRAFT — needs confirmation</span>':''
+    const cm=Lf.circleMarker([i.a,i.o],{
+      radius:baseR,
+      fillColor:sv.color,
+      color:isGhost?sv.color:(isDraft?'#C9A84C':sv.color),
+      weight:isGhost?2:(isDraft?2:3),
+      fillOpacity:isGhost?.3:(isDraft?.6:.95), // Ghost = semi-transparent
+      dashArray:isGhost?'4 4':(isDraft?'6 3':null), // Ghost = dashed
+      className:isGhost?'ghost-node':'',
+    }).bindPopup(`<b>${ic} ${i.ti}</b><br><span style="color:${sv.color};font-weight:700">${i.s.toUpperCase()}</span> · ${i.dt}<br>${i.d}<br><small>⚔️ ${i.ac} · 🏥 ${i.og}</small>${ghostNote}${draftLabel}${vdBtn('incident',i.id)}`);
+    if(anim&&(i.s==='critical'||i.s==='high')&&!isGhost)cm.on('add',()=>{const e=cm.getElement();if(e)e.classList.add('anim-pulse')});
     cm.addTo(g.incidents);
-    // Outer glow ring
+    // Outer glow ring (reduced for ghosts)
     const glowR={critical:40000,high:25000,medium:15000,low:8000}[i.s]||15000;
-    Lf.circle([i.a,i.o],{radius:glowR,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:.08,dashArray:'6 4'}).addTo(g.incidents);
-    // Inner bright ring for critical/high
-    if(i.s==='critical'||i.s==='high')Lf.circleMarker([i.a,i.o],{radius:baseR+6,fillColor:'transparent',color:sv.color,weight:1.5,fillOpacity:0,opacity:.5}).addTo(g.incidents)})
+    Lf.circle([i.a,i.o],{radius:glowR,fillColor:sv.color,color:sv.color,weight:1.5,fillOpacity:isGhost?.03:.08,dashArray:'6 4'}).addTo(g.incidents);
+    // Inner bright ring for critical/high (skip for ghosts)
+    if((i.s==='critical'||i.s==='high')&&!isGhost)Lf.circleMarker([i.a,i.o],{radius:baseR+6,fillColor:'transparent',color:sv.color,weight:1.5,fillOpacity:0,opacity:.5}).addTo(g.incidents)})
   // Dashed lines between nearby/related incidents (same region, <200km apart)
   const incs=ev.incidents||[];
   for(let a=0;a<incs.length;a++){for(let b=a+1;b<incs.length;b++){

@@ -21,6 +21,10 @@ html,body,#root{height:100%;overflow:hidden;font-family:'Source Serif 4',Georgia
 /* When animations disabled */
 .no-anim .anim-dash,.no-anim .anim-dash-fast,.no-anim .anim-pulse{animation:none!important}
 
+/* V4 HITL: Ghost nodes (AI uncertain locations) */
+.ghost-node{animation:ghostPulse 2s ease-in-out infinite}
+@keyframes ghostPulse{0%,100%{opacity:.3}50%{opacity:.5}}
+
 .app-layout{display:flex;height:100vh;width:100vw;position:relative}
 .panel{width:340px;min-width:340px;display:flex;flex-direction:column;background:var(--bg-secondary);border-right:1px solid var(--border-primary);z-index:100;transition:width .3s ease,min-width .3s ease,opacity .3s ease;position:relative}
 .panel.collapsed{width:0;min-width:0;overflow:hidden;opacity:0;border-right:none}
