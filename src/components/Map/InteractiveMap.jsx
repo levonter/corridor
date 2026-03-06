@@ -72,10 +72,13 @@ function InteractiveMap({
   }, [mapReady])
 
   // ─── Init Leaflet ─────────────────────────────────────
+  const initStartedRef = useRef(false)
   useEffect(() => {
-    if (mapRef.current) return
+    if (mapRef.current || initStartedRef.current) return
+    initStartedRef.current = true
 
     import('leaflet').then(mod => {
+      if (mapRef.current) return // double-check after async
       const L = mod.default || mod
       leafletRef.current = L
 
@@ -87,6 +90,7 @@ function InteractiveMap({
         shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       })
 
+      if (!containerRef.current) return // container unmounted
       const map = L.map(containerRef.current, { zoomControl: true })
         .setView(activeEvent?.region?.center || [9.5, 30.5], activeEvent?.region?.zoom || 6)
 
@@ -126,6 +130,9 @@ function InteractiveMap({
       }
 
       setMapReady(true)
+      // Force tile load after container is sized
+      setTimeout(() => { map.invalidateSize(); }, 100)
+      setTimeout(() => { map.invalidateSize(); }, 500)
     })
 
     return () => {
@@ -134,6 +141,7 @@ function InteractiveMap({
         mapRef.current.remove()
         mapRef.current = null
       }
+      initStartedRef.current = false
     }
   }, []) // mount only
 
@@ -274,21 +282,20 @@ function InteractiveMap({
   const sortedIncidents = useMemo(() => [...(activeEvent?.incidents || [])].sort((a, b) => a.dt.localeCompare(b.dt)), [activeEvent?.incidents])
 
   return (
-    <div className="relative w-full h-full">
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       {/* Leaflet Container */}
       <div
         ref={containerRef}
-        className="w-full h-full"
-        style={{ cursor: mapClickMode ? 'crosshair' : 'grab' }}
+        style={{ width: '100%', height: '100%', cursor: mapClickMode ? 'crosshair' : 'grab' }}
       />
 
       {/* Map Title Bar */}
-      <div className="absolute top-3 left-11 z-[1000] pointer-events-none flex gap-2.5 items-center">
-        <span className="text-[calc(var(--fs)*.65)] font-bold tracking-[.12em] uppercase text-[var(--text-secondary)] bg-[var(--glass)] px-4 py-1.5 rounded-md">
+      <div style={{ position: 'absolute', top: 12, left: 44, zIndex: 1000, pointerEvents: 'none', display: 'flex', gap: 10, alignItems: 'center' }}>
+        <span style={{ fontSize: 'calc(var(--fs)*.65)', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', background: 'var(--glass)', padding: '6px 16px', borderRadius: 6 }}>
           Humanitarian Corridor Map
         </span>
         {(activeEvent?.incidents || []).filter(i => i.s === 'critical').length > 0 && (
-          <span className="text-[calc(var(--fs)*.6)] text-crisis-critical bg-crisis-critical-bg px-3 py-1 rounded-md font-bold tracking-[.06em]">
+          <span style={{ fontSize: 'calc(var(--fs)*.6)', color: 'var(--danger)', background: 'var(--danger-bg)', padding: '4px 12px', borderRadius: 6, fontWeight: 700, letterSpacing: '.06em' }}>
             {(activeEvent.incidents || []).filter(i => i.s === 'critical').length} Critical
           </span>
         )}
@@ -296,18 +303,18 @@ function InteractiveMap({
 
       {/* Map Click Mode Banner */}
       {mapClickMode && (
-        <div className="absolute top-3.5 right-3.5 z-[1000] bg-[var(--accent)] text-white px-3.5 py-1.5 rounded-lg font-bold animate-pulse-glow">
+        <div style={{ position: 'absolute', top: 14, right: 14, zIndex: 1000, background: 'var(--accent)', color: '#FFF', padding: '6px 14px', borderRadius: 8, fontWeight: 700, animation: 'pulse 1.5s infinite' }}>
           {_('clickMap')}
         </div>
       )}
 
       {/* Drawing Mode Banner */}
       {draw.drawingMode && (
-        <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-[1000] bg-[var(--accent)] text-white px-4 py-1.5 rounded-lg font-bold text-[calc(var(--fs)*.72)] animate-pulse-glow flex items-center gap-2">
+        <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'var(--accent)', color: '#FFF', padding: '6px 18px', borderRadius: 8, fontWeight: 700, fontSize: 'calc(var(--fs)*.72)', animation: 'pulse 1.5s infinite', display: 'flex', alignItems: 'center', gap: 8 }}>
           ✏️ Drawing: {draw.drawingMode}
           <button
             onClick={draw.stopDraw}
-            className="bg-white/20 border-none text-white cursor-pointer rounded-[5px] px-2 py-0.5 font-bold font-inherit"
+            style={{ background: 'rgba(255,255,255,.2)', border: 'none', color: '#FFF', cursor: 'pointer', borderRadius: 5, padding: '2px 8px', fontFamily: 'inherit', fontWeight: 700 }}
           >
             Cancel
           </button>
@@ -319,30 +326,22 @@ function InteractiveMap({
 
       {/* Map Action Buttons (Warning + Print) */}
       {!mapClickMode && !draw.drawingMode && (
-        <div className="absolute top-3.5 right-14 z-[999] flex gap-1.5 flex-col">
+        <div style={{ position: 'absolute', top: 14, right: 56, zIndex: 999, display: 'flex', gap: 5, flexDirection: 'column' }}>
           <button
-            onClick={() => {
-              const store = useAppStore.getState()
-              store.setDetailOpen(true)
-              store.setDetailTab('incidents')
-            }}
-            className="w-9 h-9 rounded-lg border border-[var(--border-primary)] bg-[var(--glass-strong)] cursor-pointer text-[calc(var(--fs)*1)]"
-          >
-            ⚠️
-          </button>
+            onClick={() => { useAppStore.getState().setDetailOpen(true); useAppStore.getState().setDetailTab('incidents') }}
+            style={{ width: 36, height: 36, borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--glass-strong)', cursor: 'pointer', fontSize: 'calc(var(--fs)*1)' }}
+          >⚠️</button>
           <button
             onClick={() => window.print()}
-            className="w-9 h-9 rounded-lg border border-[var(--border-primary)] bg-[var(--glass-strong)] cursor-pointer text-[calc(var(--fs)*1)]"
-          >
-            🖨️
-          </button>
+            style={{ width: 36, height: 36, borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--glass-strong)', cursor: 'pointer', fontSize: 'calc(var(--fs)*1)' }}
+          >🖨️</button>
         </div>
       )}
 
       {/* Timeline Bar */}
       {sortedIncidents.length > 0 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] flex gap-2 bg-[var(--glass-strong)] border border-[var(--border-primary)] rounded-xl px-4 py-2.5 items-center shadow-[var(--shadow-md)]">
-          <span className="text-[calc(var(--fs)*.72)] text-[var(--text-muted)] font-bold mr-1.5">
+        <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', gap: 8, background: 'var(--glass-strong)', border: '1px solid var(--border-primary)', borderRadius: 12, padding: '10px 18px', alignItems: 'center', boxShadow: 'var(--shadow-md)' }}>
+          <span style={{ fontSize: 'calc(var(--fs)*.72)', color: 'var(--text-muted)', fontWeight: 700, marginRight: 6 }}>
             {_('timeline')}
           </span>
           {sortedIncidents.map(inc => (
@@ -350,15 +349,14 @@ function InteractiveMap({
               key={inc.id}
               title={inc.ti}
               onClick={() => window.__cpMapFlyTo?.(inc.a, inc.o)}
-              className="flex flex-col items-center cursor-pointer p-1 px-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <span className="text-[calc(var(--fs)*1.3)]">
+              <span style={{ fontSize: 'calc(var(--fs)*1.3)' }}>
                 {ICON_MAP[inc.tp] || '⚠️'}
               </span>
-              <span
-                className="text-[calc(var(--fs)*.62)] mt-0.5 font-bold"
-                style={{ color: (SEVERITY[inc.s] || SEVERITY.medium).color }}
-              >
+              <span style={{ fontSize: 'calc(var(--fs)*.62)', marginTop: 3, fontWeight: 700, color: (SEVERITY[inc.s] || SEVERITY.medium).color }}>
                 {inc.dt.slice(5)}
               </span>
             </div>
