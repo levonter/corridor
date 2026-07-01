@@ -19,7 +19,8 @@ export default function SharedView({data}){
         const L=mod.default||mod
         delete L.Icon.Default.prototype._getIconUrl
         L.Icon.Default.mergeOptions({iconRetinaUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'})
-        const m=L.map(cR.current,{zoomControl:true}).setView(ev.region?.center||[9.5,30.5],ev.region?.zoom||6)
+        const m=L.map(cR.current,{zoomControl:true,attributionControl:false}).setView(ev.region?.center||[9.5,30.5],ev.region?.zoom||6)
+        L.control.attribution({prefix:false}).addAttribution('© <a href="https://maplibre.org">MapLibre</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>').addTo(m)
         mR.current=m
         L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:20}).addTo(m)
         const layers=renderEventToMap(L,ev,true)
