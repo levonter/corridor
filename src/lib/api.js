@@ -9,7 +9,7 @@
 import { QueryClient, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import useAppStore from '../store/useAppStore.js'
 import {
-  BRIEF_ANALYSIS_PROMPT, buildSystemPrompt, localParseBrief, setGeoBias
+  BRIEF_ANALYSIS_PROMPT, buildAnalysisPromptV4, buildSystemPrompt, localParseBrief, setGeoBias
 } from '../data/events.js'
 
 // ─── Query Client (singleton) ─────────────────────────────────
@@ -147,29 +147,31 @@ export function useBriefAnalysis() {
         return { incidents: localResults, source: 'Local Parser + Nominatim' }
       }
 
-      // Try AI parse
+      // Try AI parse with V4 prompt (includes uncertainty flags)
       try {
+        const ev = state.events.find(e => e.id === eventId)
         const raw = await callAI(
-          [{ role: 'user', content: BRIEF_ANALYSIS_PROMPT + ' ' + text }],
+          [{ role: 'user', content: buildAnalysisPromptV4(ev, text) }],
           null,
           2048
         )
         const match = raw.match(/\[[\s\S]*\]/)
         if (match) {
           const parsed = JSON.parse(match[0])
+          // V4 schema: lat/lng/title/type/severity/date → internal: a/o/ti/tp/s/dt
           const aiIncidents = parsed
-            .filter(p => typeof p.a === 'number' && typeof p.o === 'number')
+            .filter(p => typeof (p.lat ?? p.a) === 'number' && typeof (p.lng ?? p.o) === 'number')
             .map((p, i) => ({
               id: 'ai_' + Date.now() + '_' + i,
-              dt: p.dt || new Date().toISOString().slice(0, 10),
-              a: p.a,
-              o: p.o,
-              tp: p.tp || 'displacement',
-              s: p.s || 'medium',
-              ti: p.ti || 'AI Detected',
-              d: p.d || '',
-              ac: p.ac || 'Unknown',
-              og: p.og || 'AI',
+              dt: p.date || p.dt || new Date().toISOString().slice(0, 10),
+              a: p.lat ?? p.a,
+              o: p.lng ?? p.o,
+              tp: (p.type || p.tp || 'displacement').toLowerCase().replace(/_/g, '-'),
+              s: (p.severity || p.s || 'medium').toLowerCase(),
+              ti: p.title || p.ti || 'AI Detected',
+              d: p.description || p.d || '',
+              ac: p.actor || p.ac || 'Unknown',
+              og: p.organization || p.og || 'AI',
               _uncertainty: p.uncertainty || false,
               _uncertaintyNote: p.uncertainty_note || null,
             }))
@@ -203,9 +205,15 @@ export function useBriefAnalysis() {
           ? `🗺️ Mapped ${count} incident(s) via ${data.source}. Check the map!`
           : `No new incidents extracted via ${data.source}. Include place names like cities, towns, or regions.`
       )
-      // Update region bias for future geocoding
+      // Update region bias for future geocoding + re-center map
       const ev = state.events.find(e => e.id === eventId)
-      if (ev?.region) setGeoBias(ev.region)
+      if (ev?.region) {
+        setGeoBias(ev.region)
+        // Trigger map fitBounds if available
+        if (ev.region.bounds && window.__cpMapFitBounds) {
+          window.__cpMapFitBounds(ev.region.bounds)
+        }
+      }
     },
 
     onError: (error, { eventId }) => {
